@@ -1,0 +1,25 @@
+{
+    "name": "@aether/server",
+    "version": "0.0.1",
+    "license": "MIT",
+    "type": "module",
+    "main": "dist/index.js",
+    "typings": "dist/index.d.ts",
+    "exports": {
+        "./package.json": "./package.json",
+        ".": "./dist/index.js",
+        "./adapters/http": "./dist/adapters/http.js",
+        "./adapters/next": "./dist/adapters/next.js",
+        "./core": "./dist/core/index.js"
+    },
+    "scripts": {
+        "dev": "tsc -w",
+        "build": "tsc && tsc-alias"
+    },
+    "devDependencies": {
+        "@types/node": "^20.14.2",
+        "next": "^14.2.4",
+        "typescript": "^5.4.5",
+        "zod": "^3.23.8"
+    }
+}
