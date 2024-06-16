@@ -2,11 +2,11 @@ import { ZodType, z } from "zod";
 import { Handler } from "./handler";
 import { Middleware } from "./middleware";
 
-export type DefaultContext = {
+export type AetherContext = {
     path: string;
 };
 
-export class Procedure<Context extends DefaultContext> {
+export class Procedure<Context extends AetherContext> {
     constructor(
         private context: Context = {} as Context,
         private middlewares: Array<Middleware<Context>> = [],
@@ -37,42 +37,37 @@ export class Procedure<Context extends DefaultContext> {
     }) {
         const { input, output, resolve } = config;
         return async (data: InputSchema, defaultContext: object) => {
-            try {
-                const context = {
-                    ...defaultContext,
-                    ...(await this.applyMiddlewares({ ...this.context, ...(defaultContext as Context) })),
-                };
+            const context = {
+                ...defaultContext,
+                ...(await this.applyMiddlewares({ ...this.context, ...(defaultContext as Context) })),
+            };
 
-                if (input) {
-                    const result = input.safeParse(data);
-                    if (!result.success) {
-                        const errorDetails = result.error.errors.map((err) => ({
-                            path: err.path,
-                            message: err.message,
-                        }));
-                        throw new Error(JSON.stringify(errorDetails));
-                    }
-                    data = result.data;
+            if (input) {
+                const result = input.safeParse(data);
+                if (!result.success) {
+                    const errorDetails = result.error.errors.map((err) => ({
+                        path: err.path,
+                        message: err.message,
+                    }));
+                    throw new Error(JSON.stringify(errorDetails));
                 }
+                data = result.data;
+            }
 
-                const response = await resolve({ ...context, input: data });
+            const response = await resolve({ ...context, input: data });
 
-                if (output) {
-                    const outputResult = output.safeParse(response);
-                    if (!outputResult.success) {
-                        const errorDetails = outputResult.error.errors.map((err) => ({
-                            path: err.path,
-                            message: err.message,
-                        }));
-                        throw new Error(JSON.stringify(errorDetails));
-                    }
-                    return response;
-                } else {
-                    return response;
+            if (output) {
+                const outputResult = output.safeParse(response);
+                if (!outputResult.success) {
+                    const errorDetails = outputResult.error.errors.map((err) => ({
+                        path: err.path,
+                        message: err.message,
+                    }));
+                    throw new Error(JSON.stringify(errorDetails));
                 }
-            } catch (e) {
-                const message = e instanceof Error ? e.message : e;
-                return { error: message };
+                return response;
+            } else {
+                return response;
             }
         };
     }

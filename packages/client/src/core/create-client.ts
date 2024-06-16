@@ -1,19 +1,25 @@
 type RemoveDefaultContext<T> = T extends object
     ? {
           [K in keyof T]: T[K] extends (...args: infer Args) => infer R
-              ? Args extends [infer InputData, any?]
-                  ? (inputData: InputData) => R
+              ? Args extends [infer InputData, ...infer Rest]
+                  ? Rest extends [any?]
+                      ? (input: InputData) => R
+                      : T[K]
                   : T[K]
               : RemoveDefaultContext<T[K]>;
       }
     : T;
 
-export type AetherClient<T> = RemoveDefaultContext<{
-    [K in keyof T]: T[K] extends (...args: any[]) => infer R
-        ? (inputData: void) => R
-        : T[K] extends object
-          ? AetherClient<T[K]>
-          : T[K];
+type AetherClient<T> = RemoveDefaultContext<{
+    [K in keyof T]: T[K] extends (...args: infer Args) => infer R
+        ? Args extends [infer InputData, ...infer Rest]
+            ? Rest extends [any?]
+                ? (input: InputData) => R
+                : T[K]
+            : T[K] extends object
+              ? AetherClient<T[K]>
+              : T[K]
+        : T[K];
 }>;
 
 export type CreateClientConfiguration = {
@@ -39,6 +45,7 @@ export const createClient = <Router extends object>(config?: CreateClientConfigu
                     method: "POST",
                     body: JSON.stringify(args[0]),
                     headers: { "Content-Type": "application/json" },
+                    cache: "no-cache",
                 }).then((res) => res.json());
             },
         });

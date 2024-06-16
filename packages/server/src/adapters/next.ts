@@ -23,7 +23,7 @@ export const createNextHandler = <Router extends object>({
                 ...(await createContext(req)),
             };
 
-            const body = req.json().catch(() => void 0);
+            const body = await req.json().catch(() => void 0);
 
             const response = await handler(body, context);
 
