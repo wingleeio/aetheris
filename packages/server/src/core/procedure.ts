@@ -50,7 +50,7 @@ export class Procedure<Context extends AetherContext> {
         const { input, output, params, resolve } = config;
         return async (
             data: InputSchema extends ZodType<any, any, any> ? z.infer<InputSchema> : void,
-            defaultContext: Context,
+            defaultContext: HandlerContext,
         ) => {
             const context = {
                 ...defaultContext,
@@ -68,8 +68,17 @@ export class Procedure<Context extends AetherContext> {
                 }
             }
 
-            //TODO: Can we do this without ts-ignore?
-            //@ts-ignore
+            if (params) {
+                const result = params.safeParse(context.params);
+                if (!result.success) {
+                    const errorDetails = result.error.errors.map((err) => ({
+                        path: err.path,
+                        message: err.message,
+                    }));
+                    throw new Error(JSON.stringify(errorDetails));
+                }
+            }
+
             const response = await resolve({ ...context, input: data });
 
             if (output) {
