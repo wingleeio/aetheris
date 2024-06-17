@@ -1,25 +1,27 @@
-type RemoveDefaultContext<T> = T extends object
+type TransformKey<Key extends any> = Key extends `${infer Prefix}:` ? `${Prefix}:${string}` : Key;
+
+type RemoveDefaultContext<Router> = Router extends object
     ? {
-          [K in keyof T]: T[K] extends (...args: infer Args) => infer R
+          [Key in keyof Router as TransformKey<Key>]: Router[Key] extends (...args: infer Args) => infer R
               ? Args extends [infer InputData, ...infer Rest]
                   ? Rest extends [any?]
                       ? (input: InputData) => R
-                      : T[K]
-                  : T[K]
-              : RemoveDefaultContext<T[K]>;
+                      : Router[Key]
+                  : Router[Key]
+              : RemoveDefaultContext<Router[Key]>;
       }
-    : T;
+    : Router;
 
-type AetherClient<T> = RemoveDefaultContext<{
-    [K in keyof T]: T[K] extends (...args: infer Args) => infer R
+export type AetherClient<Router> = RemoveDefaultContext<{
+    [Key in keyof Router as TransformKey<Key>]: Router[Key] extends (...args: infer Args) => infer R
         ? Args extends [infer InputData, ...infer Rest]
             ? Rest extends [any?]
                 ? (input: InputData) => R
-                : T[K]
-            : T[K] extends object
-              ? AetherClient<T[K]>
-              : T[K]
-        : T[K];
+                : Router[Key]
+            : Router[Key] extends object
+              ? AetherClient<Router[Key]>
+              : Router[Key]
+        : Router[Key];
 }>;
 
 export type CreateClientConfiguration = {
