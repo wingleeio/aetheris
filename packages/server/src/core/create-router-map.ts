@@ -1,5 +1,7 @@
+export type RouterMap = { [key: string]: { regex: RegExp; handler: any; keys: string[] } };
+
 export const createRouterMap = <Router extends object>(router: Router) => {
-    const map: { [key: string]: { regex: RegExp; handler: any; keys: string[] } } = {};
+    const map: RouterMap = {};
 
     const buildMap = (router: Router, path = "") => {
         for (const key in router) {

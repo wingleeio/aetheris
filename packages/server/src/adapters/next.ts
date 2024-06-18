@@ -1,5 +1,6 @@
+import { createRouterMap, getMatch } from "../core";
+
 import { NextRequest } from "next/server";
-import { createRouterMap } from "../core";
 
 export const createNextHandler = <Router extends object>({
     router,
@@ -15,21 +16,7 @@ export const createNextHandler = <Router extends object>({
         const url = new URL(req.url!);
         const path = prefix ? url.pathname.replace(prefix, "") : url.pathname;
 
-        let handler: any;
-        let params: Record<string, string> = {};
-
-        for (const route in map) {
-            const { regex, keys, handler: routeHandler } = map[route];
-            const match = path.match(regex);
-
-            if (match) {
-                handler = routeHandler;
-                keys.forEach((name, index) => {
-                    params[name] = match[index + 1].replace(`${name}:`, "");
-                });
-                break;
-            }
-        }
+        const { handler, params } = getMatch(map, path);
 
         if (typeof handler === "function") {
             const context = {

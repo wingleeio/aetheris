@@ -1,6 +1,5 @@
 import { IncomingMessage, ServerResponse } from "http";
-
-import { createRouterMap } from "../core";
+import { createRouterMap, getMatch } from "../core";
 
 export const createHTTPHandler = <Router extends object>({
     router,
@@ -17,21 +16,7 @@ export const createHTTPHandler = <Router extends object>({
         const url = req.url!;
         const path = prefix ? url.replace(prefix, "") : url;
 
-        let handler: any;
-        let params: Record<string, string> = {};
-
-        for (const route in map) {
-            const { regex, keys, handler: routeHandler } = map[route];
-            const match = path.match(regex);
-
-            if (match) {
-                handler = routeHandler;
-                keys.forEach((name, index) => {
-                    params[name] = match[index + 1].replace(`${name}:`, "");
-                });
-                break;
-            }
-        }
+        const { handler, params } = getMatch(map, path);
 
         if (typeof handler === "function") {
             const context = {
