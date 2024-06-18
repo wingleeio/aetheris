@@ -1,1 +1,1 @@
-export { createAether, ProcedureResponse } from "./core";
+export { createAether, AetherError } from "./core";

@@ -1,5 +1,6 @@
 import { ZodType, z } from "zod";
 
+import { AetherError } from "./aether-error";
 import { Handler } from "./handler";
 import { Middleware } from "./middleware";
 
@@ -82,7 +83,11 @@ export class Procedure<Context extends AetherContext> {
                             path: err.path,
                             message: err.message,
                         }));
-                        throw new Error(JSON.stringify(errorDetails));
+                        throw new AetherError({
+                            status: 400,
+                            message: "Error validating input",
+                            data: errorDetails,
+                        });
                     }
                 }
 
@@ -93,7 +98,11 @@ export class Procedure<Context extends AetherContext> {
                             path: err.path,
                             message: err.message,
                         }));
-                        throw new Error(JSON.stringify(errorDetails));
+                        throw new AetherError({
+                            status: 400,
+                            message: "Error validating params",
+                            data: errorDetails,
+                        });
                     }
                 }
 
@@ -106,7 +115,11 @@ export class Procedure<Context extends AetherContext> {
                             path: err.path,
                             message: err.message,
                         }));
-                        throw new Error(JSON.stringify(errorDetails));
+                        throw new AetherError({
+                            status: 500,
+                            message: "Error validating output",
+                            data: errorDetails,
+                        });
                     }
                 }
 
@@ -116,6 +129,13 @@ export class Procedure<Context extends AetherContext> {
                     data: response,
                 };
             } catch (e) {
+                if (e instanceof AetherError) {
+                    return {
+                        ok: false,
+                        status: e.error.status,
+                        error: e,
+                    };
+                }
                 return {
                     ok: false,
                     status: 500,
