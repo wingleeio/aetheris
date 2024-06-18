@@ -1,1 +1,1 @@
-export { createAether } from "./core";
+export { createAether, AetherError } from "./core";

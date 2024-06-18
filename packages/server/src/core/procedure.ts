@@ -1,6 +1,22 @@
 import { ZodType, z } from "zod";
+
+import { AetherError } from "./aether-error";
 import { Handler } from "./handler";
 import { Middleware } from "./middleware";
+
+export type ProcedureResponse<Data, Error> =
+    | {
+          ok: true;
+          status: number;
+          data: Data;
+          error?: Error;
+      }
+    | {
+          ok: false;
+          status: number;
+          data?: Data;
+          error: Error;
+      };
 
 export type AetherContext<
     InputSchema extends ZodType<any, any, any> | void = void,
@@ -51,48 +67,80 @@ export class Procedure<Context extends AetherContext> {
         return async (
             data: InputSchema extends ZodType<any, any, any> ? z.infer<InputSchema> : void,
             defaultContext: HandlerContext,
-        ) => {
-            const context = {
-                ...defaultContext,
-                ...(await this.applyMiddlewares({ ...this.context, defaultContext })),
-            };
+        ): Promise<
+            ProcedureResponse<OutputSchema extends ZodType<any, any, any> ? z.infer<OutputSchema> : R, Error>
+        > => {
+            try {
+                const context = {
+                    ...defaultContext,
+                    ...(await this.applyMiddlewares({ ...this.context, ...defaultContext })),
+                };
 
-            if (input) {
-                const result = input.safeParse(data);
-                if (!result.success) {
-                    const errorDetails = result.error.errors.map((err) => ({
-                        path: err.path,
-                        message: err.message,
-                    }));
-                    throw new Error(JSON.stringify(errorDetails));
+                if (input) {
+                    const result = input.safeParse(data);
+                    if (!result.success) {
+                        const errorDetails = result.error.errors.map((err) => ({
+                            path: err.path,
+                            message: err.message,
+                        }));
+                        throw new AetherError({
+                            status: 400,
+                            message: "Error validating input",
+                            data: errorDetails,
+                        });
+                    }
                 }
-            }
 
-            if (params) {
-                const result = params.safeParse(context.params);
-                if (!result.success) {
-                    const errorDetails = result.error.errors.map((err) => ({
-                        path: err.path,
-                        message: err.message,
-                    }));
-                    throw new Error(JSON.stringify(errorDetails));
+                if (params) {
+                    const result = params.safeParse(context.params);
+                    if (!result.success) {
+                        const errorDetails = result.error.errors.map((err) => ({
+                            path: err.path,
+                            message: err.message,
+                        }));
+                        throw new AetherError({
+                            status: 400,
+                            message: "Error validating params",
+                            data: errorDetails,
+                        });
+                    }
                 }
-            }
 
-            const response = await resolve({ ...context, input: data });
+                const response = await resolve({ ...context, input: data });
 
-            if (output) {
-                const outputResult = output.safeParse(response);
-                if (!outputResult.success) {
-                    const errorDetails = outputResult.error.errors.map((err) => ({
-                        path: err.path,
-                        message: err.message,
-                    }));
-                    throw new Error(JSON.stringify(errorDetails));
+                if (output) {
+                    const outputResult = output.safeParse(response);
+                    if (!outputResult.success) {
+                        const errorDetails = outputResult.error.errors.map((err) => ({
+                            path: err.path,
+                            message: err.message,
+                        }));
+                        throw new AetherError({
+                            status: 500,
+                            message: "Error validating output",
+                            data: errorDetails,
+                        });
+                    }
                 }
-                return response;
-            } else {
-                return response;
+
+                return {
+                    ok: true,
+                    status: 200,
+                    data: response,
+                };
+            } catch (e) {
+                if (e instanceof AetherError) {
+                    return {
+                        ok: false,
+                        status: e.error.status,
+                        error: e,
+                    };
+                }
+                return {
+                    ok: false,
+                    status: 500,
+                    error: e as Error,
+                };
             }
         };
     }

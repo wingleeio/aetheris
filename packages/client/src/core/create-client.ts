@@ -1,34 +1,8 @@
-type TransformKey<Key extends any> = Key extends `${infer Prefix}:` ? `${Prefix}:${string}` : Key;
-
-type RemoveDefaultContext<Router> = Router extends object
-    ? {
-          [Key in keyof Router as TransformKey<Key>]: Router[Key] extends (...args: infer Args) => infer R
-              ? Args extends [infer InputData, ...infer Rest]
-                  ? Rest extends [any?]
-                      ? (input: InputData) => R
-                      : Router[Key]
-                  : Router[Key]
-              : RemoveDefaultContext<Router[Key]>;
-      }
-    : Router;
-
-export type AetherClient<Router> = RemoveDefaultContext<{
-    [Key in keyof Router as TransformKey<Key>]: Router[Key] extends (...args: infer Args) => infer R
-        ? Args extends [infer InputData, ...infer Rest]
-            ? Rest extends [any?]
-                ? (input: InputData) => R
-                : Router[Key]
-            : Router[Key] extends object
-              ? AetherClient<Router[Key]>
-              : Router[Key]
-        : Router[Key];
-}>;
-
 export type CreateClientConfiguration = {
     baseUrl: string;
 };
 
-export const createClient = <Router extends object>(config?: CreateClientConfiguration): AetherClient<Router> => {
+export const createClient = <Router extends object>(config?: CreateClientConfiguration): Router => {
     const buildClient = <T>(props: string[]): T => {
         const fn = function () {
             return props;
@@ -52,5 +26,5 @@ export const createClient = <Router extends object>(config?: CreateClientConfigu
             },
         });
     };
-    return buildClient<AetherClient<Router>>([]);
+    return buildClient<Router>([]);
 };

@@ -3,10 +3,10 @@ import { z } from "zod";
 
 export const createContext = async () => ({});
 
-export const procedure = createAether<typeof createContext>();
+export const a = createAether<typeof createContext>();
 
-export const router = {
-    helloWorld: procedure.handler({
+export const router = a.router({
+    helloWorld: a.procedure.handler({
         input: z.object({
             name: z.string(),
         }),
@@ -16,6 +16,6 @@ export const router = {
             };
         },
     }),
-};
+});
 
 export type Router = typeof router;
