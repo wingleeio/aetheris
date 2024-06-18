@@ -1,1 +1,1 @@
-export { createAether } from "./core";
+export { createAether, ProcedureResponse } from "./core";

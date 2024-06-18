@@ -1,4 +1,5 @@
 import { IncomingMessage, ServerResponse } from "http";
+
 import { createRouterMap } from "../core";
 
 export const createHTTPHandler = <Router extends object>({
@@ -51,9 +52,9 @@ export const createHTTPHandler = <Router extends object>({
 
             const response = await handler(body ? JSON.parse(body) : void 0, context);
 
-            res.statusCode = 200;
+            res.statusCode = response.status;
             res.setHeader("Content-Type", "application/json");
-            res.end(JSON.stringify(response));
+            res.end(JSON.stringify(response.data ?? response.error));
         } else {
             res.statusCode = 404;
             res.end("Not found");

@@ -42,7 +42,7 @@ export const createNextHandler = <Router extends object>({
 
             const response = await handler(body, context);
 
-            return Response.json(response, { status: 200 });
+            return Response.json(response.data, { status: response.status });
         } else {
             return Response.json("Not found", { status: 404 });
         }
