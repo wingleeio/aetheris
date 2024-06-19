@@ -12,7 +12,7 @@ In this guide, we'll be focusing on the Next.js implementation which installs bo
     System requirements: Node.js 18.17 or later.
 </Callout>
 
-### Installation
+## Installation
 
 <Tabs items={["pnpm", "npm", "yarn"]}>
     <Tab>
@@ -32,7 +32,11 @@ In this guide, we'll be focusing on the Next.js implementation which installs bo
     </Tab>
 </Tabs>
 
-### Quick Start
+## Quick Start
+
+Setting up Aetheris is simple and doesn't require much boilerplate. Let's break down everything we need to do to get started.
+
+### Creating the router
 
 In an existing Next.js project, create a new file. This can be anywhere in your project, but for this example we will create a
 new directory and create an `index.ts` file. In this file we will import `createAetheris` to create a new Aetheris server.
@@ -74,4 +78,61 @@ export const router = a.router({
 });
 
 export type Router = typeof router;
+```
+
+### Creating a route handler
+
+Now that we've created a basic procedure, we can expose this API by creating a Next.js route handler. Create the new file
+in a directory like `src/app/api/[[...slug]]/route.ts" and import the `router` object we created earlier and the createNextHandler
+function from the `@aetheris/server` package. The `createNextHandler` function will create a new Next.js route handler that you can
+assign to the POST method of your route.
+
+```ts filename="src/app/api/[[...slug]]/route.ts" {0-2, 4-8, 10} copy
+import { createNextHandler } from "@aetheris/server/adapters/next";
+import { router } from "@/server";
+
+const handler = createNextHandler({
+    router,
+    // We have to set a prefix to let Aetheris know where the route is located.
+    prefix: "/api",
+});
+
+export const POST = handler;
+```
+
+### Creating the API client
+
+After creating this file, we still need a method to call the API. Create a new file in a directory like `src/lib/api.ts` and import
+the `createClient` function from the `@aetheris/client` package. This function takes a generic type that represents the router object.
+We can import the `Router` type we exported earlier to use as the generic type. For this example, we will hardcode the base URL, but you
+will likely need some additional logic to determine the base URL based on the environment.
+
+<Callout type="warning" emoji="⚠️">
+    Currently `createClient` does not support other transports and only uses fetch.
+</Callout>
+
+```ts filename="src/lib/api.ts" {0-2, 4-7} copy
+import type { Router } from "@/server";
+import { createClient } from "@aetheris/client";
+
+export const api = createClient<Router>({
+    // You will need to change this URL in your project.
+    baseUrl: "http://localhost:3000/api/",
+});
+```
+
+### Calling our API
+
+That's it! We've done everything we need to get started with Aetheris. You can now call the API from anywhere in your project by importing
+the `api` object we created earlier. If everything is set up correctly, the API client should be fully typed and will reflect any procedures
+you define in the server.
+
+```tsx filename="src/app/page.tsx" {2} copy
+export default async function Page() {
+    const response = await api.helloWorld(); // Hello World!
+
+    return (
+      <div>{response}</div>
+    );
+}
 ```
