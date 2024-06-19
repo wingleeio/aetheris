@@ -20,8 +20,9 @@ Setting up Aetheris is simple and doesn't require much boilerplate. Let's break 
 
 ### Creating the Router
 
-In an existing Next.js project, create a new file. This can be anywhere in your project, but for this example we will create a new directory and create an `index. file.
- In this file, import `createAetheris` to create a new Aetheris server.
+In an existing Next.js project, create a new file. This can be anywhere in your project, but for this example we will create a new directory and create an `index.ts` file.
+
+In this file, import `createAetheris` to create a new Aetheris server.
 
 ```typescript
 // src/server/index.ts
