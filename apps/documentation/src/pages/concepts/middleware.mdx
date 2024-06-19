@@ -1,0 +1,87 @@
+# Middleware
+
+Middlewares are a collection of asynchronous functions that have access to the context object and can modify it before
+the request in handled. Middleware can be used for various tasks such as logging, or authentication.
+
+## Creating a logging middleware
+
+In order to demonstrate how middlewares work, lets start with the Aetheris server we created in the [quick start guide](/guide/getting-started).
+
+```ts filename="src/server/index.ts" {6-10} copy
+import { createAetheris } from "@aetheris/server";
+
+const a = createAetheris();
+
+export const router = a.router({
+    helloWorld: a.procedure.handler({
+        resolve: async () => {
+            return "Hello, World!";
+        },
+    }),
+});
+
+export type Router = typeof router;
+```
+
+Here we have a basic hello world Aetheris server. Let's expand on this by adding a middleware that adds a logger to the context object. In
+this example we will be using [pino](https://github.com/pinojs/pino).
+
+```ts filename="src/server/index.ts" {2, 8-12, 16-17} copy
+import { createAetheris } from "@aetheris/server";
+import pino from "pino"
+
+const a = createAetheris();
+
+const logger = pino();
+
+const withLogger = a.procedure.use(() => {
+    return {
+        logger,
+    };
+});
+
+export const router = a.router({
+    helloWorld: withLogger.handler({
+        resolve: async ({ logger }) => {
+            logger.info("helloWorld was called.");
+            return "Hello, World!";
+        },
+    }),
+});
+
+export type Router = typeof router;
+```
+
+Now any handler created from `withLogger` will have access to the `logger` property in the context object. Additional middleware can
+access the context provided from previous middleware, allowing you to chain middleware together.
+
+```ts filename="src/server/index.ts" {14-17} copy
+import { createAetheris } from "@aetheris/server";
+import pino from "pino"
+
+const a = createAetheris();
+
+const logger = pino();
+
+const withLogger = a.procedure
+    .use(() => {
+        return {
+            logger,
+        };
+    })
+    // In order for context to be inferred, we have to chain the middleware together.
+    .use(({ logger, path }) => {
+        logger.info(`${path}`)
+    });
+
+export const router = a.router({
+    helloWorld: withLogger.handler({
+        resolve: async ({ logger }) => {
+            return "Hello, World!";
+        },
+    }),
+});
+
+export type Router = typeof router;
+```
+

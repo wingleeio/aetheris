@@ -1,4 +1,5 @@
 {
     "context": "Context",
-    "validation": "Validation"
+    "validation": "Validation",
+    "middleware": "Middleware"
 }

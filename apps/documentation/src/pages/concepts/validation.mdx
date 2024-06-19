@@ -1,3 +1,79 @@
+import { Callout } from "nextra/components";
+
 # Validation
 
-This is a stub.
+You can validate procedure handler arguments by providing a validation schema to your procedure handler.
+
+<Callout type="info" emoji="ℹ️">
+    Currently only Zod schemas are supported for validation, but we plan to support other validation libraries in the future.
+</Callout>
+
+## Validating your handler
+
+Earlier in our [quick start guide](/guide/getting-started), we created a new Aetheris server and defined a base router, but none
+of our handlers take any input or have any validation. Let's expand on what we created so that we can validate the users input.
+
+```ts filename="src/server/index.ts" {2, 8-13} copy
+import { createAetheris } from "@aetheris/server";
+import { z } from "zod";
+
+const a = createAetheris();
+
+export const router = a.router({
+    helloWorld: a.procedure.handler({
+        input: z.object({
+            name: z.string(),
+        }),
+        resolve: async ({ input }) => {
+            return `Hello, ${input}!`;
+        },
+    }),
+});
+
+export type Router = typeof router;
+```
+
+The validation schema will now validate that the input object has a `name` property that is a string. If the input object does not
+match the schema, the procedure will throw an error when resolving.
+
+The type inference from our schema will carry over to our router type, allowing the client to know what the input object should look like.
+Here is what our current router type looks like.
+
+```ts filename="src/server/index.ts" copy
+type Router = {
+    helloWorld: Resolver<{
+        input: {
+            name: string;
+        };
+        output: {
+            message: string;
+        };
+    }>;
+}
+```
+
+Validation can also be used to validate the output of a procedure. By default the return type is inferred from the return value of the resolver, but
+if you provide a `output` schema, the return value will be validated against the schema and the schema will be used instead of the inferred return
+value.
+
+```ts filename="src/server/index.ts" {7-10} copy
+export const router = a.router({
+    users: {
+        getUser: a.procedure.handler({
+            input: z.object({
+                id: z.string(),
+            }),
+            output: z.object({
+                id: z.string(),
+                name: z.string(),
+            }),
+            resolve: async ({ input }) => {
+                return {
+                    id: input.id,
+                    name: "John Doe",
+                };
+            },
+        }),
+    },
+}
+```
