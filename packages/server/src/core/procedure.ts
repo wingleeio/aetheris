@@ -1,24 +1,22 @@
 import { ZodType, z } from "zod";
 
-import { AetherError } from "./aether-error";
+import { AetherisError } from "./aetheris-error";
 import { Handler } from "./handler";
 import { Middleware } from "./middleware";
 
-export type ProcedureResponse<Data, Error> =
+export type ProcedureResponse<Data> =
     | {
           ok: true;
           status: number;
           data: Data;
-          error?: Error;
       }
     | {
           ok: false;
           status: number;
-          data?: Data;
-          error: Error;
+          data: any;
       };
 
-export type AetherContext<
+export type AetherisContext<
     InputSchema extends ZodType<any, any, any> | void = void,
     ParamsSchema extends ZodType<any, any, any> | void = void,
 > = {
@@ -27,7 +25,7 @@ export type AetherContext<
     params: ParamsSchema extends ZodType<any, any, any> ? z.infer<ParamsSchema> : Record<string, string>;
 };
 
-export class Procedure<Context extends AetherContext> {
+export class Procedure<Context extends AetherisContext> {
     constructor(
         private context: Context = {} as Context,
         private middlewares: Array<Middleware<Context>> = [],
@@ -56,7 +54,7 @@ export class Procedure<Context extends AetherContext> {
         InputSchema extends ZodType<any, any, any> | void = void,
         OutputSchema extends ZodType<any, any, any> | void = void,
         ParamsSchema extends ZodType<any, any, any> | void = void,
-        HandlerContext = AetherContext<InputSchema, ParamsSchema> & Omit<Context, "input" | "params">,
+        HandlerContext = AetherisContext<InputSchema, ParamsSchema> & Omit<Context, "input" | "params">,
     >(config: {
         input?: InputSchema;
         output?: OutputSchema;
@@ -67,9 +65,7 @@ export class Procedure<Context extends AetherContext> {
         return async (
             data: InputSchema extends ZodType<any, any, any> ? z.infer<InputSchema> : void,
             defaultContext: HandlerContext,
-        ): Promise<
-            ProcedureResponse<OutputSchema extends ZodType<any, any, any> ? z.infer<OutputSchema> : R, Error>
-        > => {
+        ): Promise<ProcedureResponse<OutputSchema extends ZodType<any, any, any> ? z.infer<OutputSchema> : R>> => {
             try {
                 const context = {
                     ...defaultContext,
@@ -83,7 +79,7 @@ export class Procedure<Context extends AetherContext> {
                             path: err.path,
                             message: err.message,
                         }));
-                        throw new AetherError({
+                        throw new AetherisError({
                             status: 400,
                             message: "Error validating input",
                             data: errorDetails,
@@ -98,7 +94,7 @@ export class Procedure<Context extends AetherContext> {
                             path: err.path,
                             message: err.message,
                         }));
-                        throw new AetherError({
+                        throw new AetherisError({
                             status: 400,
                             message: "Error validating params",
                             data: errorDetails,
@@ -115,7 +111,7 @@ export class Procedure<Context extends AetherContext> {
                             path: err.path,
                             message: err.message,
                         }));
-                        throw new AetherError({
+                        throw new AetherisError({
                             status: 500,
                             message: "Error validating output",
                             data: errorDetails,
@@ -129,17 +125,22 @@ export class Procedure<Context extends AetherContext> {
                     data: response,
                 };
             } catch (e) {
-                if (e instanceof AetherError) {
+                if (e instanceof AetherisError) {
                     return {
                         ok: false,
                         status: e.error.status,
-                        error: e,
+                        data: {
+                            message: e.message,
+                            details: e.error.data,
+                        },
                     };
                 }
                 return {
                     ok: false,
                     status: 500,
-                    error: e as Error,
+                    data: {
+                        message: (e as Error).message,
+                    },
                 };
             }
         };

@@ -1,7 +1,7 @@
 export default {
-    logo: <span>Aether</span>,
+    logo: <span>Aetheris</span>,
     project: {
-        link: "https://github.com/wingleeio/aether",
+        link: "https://github.com/wingleeio/aetheris",
     },
-    docsRepositoryBase: "https://github.com/wingleeio/aether/apps/documentation",
+    docsRepositoryBase: "https://github.com/wingleeio/aetheris/apps/documentation",
 };

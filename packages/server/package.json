@@ -1,10 +1,11 @@
 {
-    "name": "@aether/server",
+    "name": "@aetheris/server",
     "version": "0.0.1",
     "license": "MIT",
     "type": "module",
-    "main": "dist/index.js",
-    "typings": "dist/index.d.ts",
+    "main": "./dist/index.js",
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
     "exports": {
         "./package.json": "./package.json",
         ".": "./dist/index.js",
@@ -13,8 +14,8 @@
         "./core": "./dist/core/index.js"
     },
     "scripts": {
-        "dev": "tsc -w",
-        "build": "tsc && tsc-alias"
+        "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+        "build": "tsup src/index.ts --format cjs,esm --dts"
     },
     "devDependencies": {
         "@types/node": "^20.14.2",

@@ -39,7 +39,7 @@ export const createHTTPHandler = <Router extends object>({
 
             res.statusCode = response.status;
             res.setHeader("Content-Type", "application/json");
-            res.end(JSON.stringify(response.data ?? response.error));
+            res.end(JSON.stringify(response.data));
         } else {
             res.statusCode = 404;
             res.end("Not found");

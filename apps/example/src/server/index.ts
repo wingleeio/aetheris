@@ -1,9 +1,9 @@
-import { createAether } from "@aether/server";
+import { createAetheris } from "@aetheris/server";
 import { z } from "zod";
 
 export const createContext = async () => ({});
 
-export const a = createAether<typeof createContext>();
+export const a = createAetheris<typeof createContext>();
 
 export const router = a.router({
     helloWorld: a.procedure.handler({
@@ -12,7 +12,7 @@ export const router = a.router({
         }),
         resolve: async ({ input }) => {
             return {
-                message: `Hello from Aether, ${input.name}!`,
+                message: `Hello from Aetheris, ${input.name}!`,
             };
         },
     }),

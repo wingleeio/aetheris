@@ -1,4 +1,4 @@
-export class AetherError extends Error {
+export class AetherisError extends Error {
     constructor(
         public error: {
             status: number;
