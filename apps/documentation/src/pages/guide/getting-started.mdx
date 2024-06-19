@@ -83,7 +83,7 @@ export type Router = typeof router;
 ### Creating a route handler
 
 Now that we've created a basic procedure, we can expose this API by creating a Next.js route handler. Create the new file
-in a directory like `src/app/api/[[...slug]]/route.ts" and import the `router` object we created earlier and the createNextHandler
+in a directory like `src/app/api/[[...slug]]/route.ts` and import the `router` object we created earlier and the createNextHandler
 function from the `@aetheris/server` package. The `createNextHandler` function will create a new Next.js route handler that you can
 assign to the POST method of your route.
 
