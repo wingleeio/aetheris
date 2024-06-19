@@ -1,17 +1,16 @@
 import { ZodType, z } from "zod";
 
 import { AetherisError } from "./aetheris-error";
+import { CookieManager } from "./cookie-manager";
 import { Handler } from "./handler";
 import { Middleware } from "./middleware";
 
 export type ProcedureResponse<Data> =
     | {
-          ok: true;
           status: number;
           data: Data;
       }
     | {
-          ok: false;
           status: number;
           data: any;
       };
@@ -21,6 +20,7 @@ export type AetherisContext<
     ParamsSchema extends ZodType<any, any, any> | void = void,
 > = {
     path: string;
+    cookies: CookieManager;
     input: InputSchema extends ZodType<any, any, any> ? z.infer<InputSchema> : any;
     params: ParamsSchema extends ZodType<any, any, any> ? z.infer<ParamsSchema> : Record<string, string>;
 };
@@ -120,14 +120,12 @@ export class Procedure<Context extends AetherisContext> {
                 }
 
                 return {
-                    ok: true,
                     status: 200,
                     data: response,
                 };
             } catch (e) {
                 if (e instanceof AetherisError) {
                     return {
-                        ok: false,
                         status: e.error.status,
                         data: {
                             message: e.message,
@@ -136,7 +134,6 @@ export class Procedure<Context extends AetherisContext> {
                     };
                 }
                 return {
-                    ok: false,
                     status: 500,
                     data: {
                         message: (e as Error).message,

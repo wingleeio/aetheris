@@ -1,6 +1,8 @@
 import { IncomingMessage, ServerResponse } from "http";
 import { createRouterMap, getMatch } from "../core";
 
+import { HttpCookieManager } from "./cookies/http-cookie-manager";
+
 export const createHTTPHandler = <Router extends object>({
     router,
     createContext = async () => ({}),
@@ -22,6 +24,7 @@ export const createHTTPHandler = <Router extends object>({
             const context = {
                 path: url,
                 params,
+                cookies: new HttpCookieManager(req, res),
                 ...(await createContext(req, res)),
             };
 

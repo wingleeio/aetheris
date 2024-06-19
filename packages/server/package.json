@@ -14,13 +14,20 @@
         "./core": "./dist/core/index.js"
     },
     "scripts": {
-        "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
-        "build": "tsup src/index.ts --format cjs,esm --dts"
+        "dev": "tsup --format cjs,esm --dts --watch",
+        "build": "tsup --format cjs,esm --dts"
     },
     "devDependencies": {
         "@types/node": "^20.14.2",
         "next": "^14.2.4",
         "typescript": "^5.4.5",
         "zod": "^3.23.8"
+    },
+    "tsup": {
+        "entryPoints": {
+            "index": "src/index.ts",
+            "adapters/http": "src/adapters/http.ts",
+            "adapters/next": "src/adapters/next.ts"
+          }
     }
 }

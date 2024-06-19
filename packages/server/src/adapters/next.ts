@@ -1,5 +1,6 @@
 import { createRouterMap, getMatch } from "../core";
 
+import { NextCookieManager } from "./cookies/next-cookie-manager";
 import { NextRequest } from "next/server";
 
 export const createNextHandler = <Router extends object>({
@@ -19,17 +20,25 @@ export const createNextHandler = <Router extends object>({
         const { handler, params } = getMatch(map, path);
 
         if (typeof handler === "function") {
+            const cookies = new NextCookieManager(req.cookies);
             const context = {
                 path: url,
                 params,
+                cookies,
                 ...(await createContext(req)),
             };
 
             const body = await req.json().catch(() => void 0);
 
             const response = await handler(body, context);
-
-            return Response.json(response.data, { status: response.status });
+            const headers = new Headers();
+            for (const cookie of cookies.getSetCookieHeader()) {
+                headers.append("Set-Cookie", cookie);
+            }
+            return Response.json(response.data, {
+                status: response.status,
+                headers,
+            });
         } else {
             return Response.json("Not found", { status: 404 });
         }
