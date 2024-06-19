@@ -108,7 +108,7 @@ We can import the `Router` type we exported earlier to use as the generic type. 
 will likely need some additional logic to determine the base URL based on the environment.
 
 <Callout type="warning" emoji="⚠️">
-    Currently `createClient` does not support other transports and only uses fetch.
+    Currently `createClient` does not support other transports and only uses fetch. This is a naive implementation and will be improved in the future.
 </Callout>
 
 ```ts filename="src/lib/api.ts" {0-2, 4-7} copy

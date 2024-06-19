@@ -3,5 +3,10 @@ export default {
     project: {
         link: "https://github.com/wingleeio/aetheris",
     },
-    docsRepositoryBase: "https://github.com/wingleeio/aetheris/apps/documentation",
+    docsRepositoryBase: "https://github.com/wingleeio/aetheris/tree/main/apps/documentation",
+    useNextSeoProps() {
+        return {
+          titleTemplate: '%s – Aetheris'
+        }
+      }
 };
