@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { api } from "@/lib/api";
 
 export default async function Home() {
