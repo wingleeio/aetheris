@@ -1,7 +1,7 @@
 import { createRouterMap, getMatch } from "../core";
 
-import { NextCookieManager } from "./cookies/next-cookie-manager";
 import { NextRequest } from "next/server";
+import { NextCookieManager } from "./cookies/next-cookie-manager";
 
 export const createNextHandler = <Router extends object>({
     router,
@@ -35,7 +35,7 @@ export const createNextHandler = <Router extends object>({
             for (const cookie of cookies.getSetCookieHeader()) {
                 headers.append("Set-Cookie", cookie);
             }
-            return Response.json(response.data, {
+            return Response.json(response.data ?? null, {
                 status: response.status,
                 headers,
             });

@@ -22,7 +22,10 @@ export const createClient = <Router extends object>(config?: CreateClientConfigu
                     body: JSON.stringify(args[0]),
                     headers: { "Content-Type": "application/json" },
                     cache: "no-cache",
-                }).then((res) => res.json());
+                    credentials: "include",
+                })
+                    .then((res) => res.json())
+                    .catch((err) => err);
             },
         });
     };

@@ -1,5 +1,11 @@
 # @aetheris/server
 
+## 0.0.3
+
+### Patch Changes
+
+-   Set response to null if no value returned in handler
+
 ## 0.0.2
 
 ### Patch Changes

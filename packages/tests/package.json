@@ -1,5 +1,6 @@
 {
     "name": "@aetheris/tests",
+    "version": "0.0.1",
     "license": "MIT",
     "type": "module",
     "main": "./dist/index.js",
@@ -10,8 +11,8 @@
         "test": "node --import tsx --test src/**/*.test.ts"
     },
     "dependencies": {
-        "@aetheris/server": "*",
-        "@aetheris/client": "*"
+        "@aetheris/client": "*",
+        "@aetheris/server": "*"
     },
     "devDependencies": {
         "@types/node": "^20.14.2",
