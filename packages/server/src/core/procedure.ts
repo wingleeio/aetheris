@@ -4,16 +4,7 @@ import { AetherisError } from "./aetheris-error";
 import { CookieManager } from "./cookie-manager";
 import { Handler } from "./handler";
 import { Middleware } from "./middleware";
-
-export type ProcedureResponse<Data> =
-    | {
-          status: number;
-          data: Data;
-      }
-    | {
-          status: number;
-          data: any;
-      };
+import { ProcedureResponse } from "./procedure-response";
 
 export type AetherisContext<
     InputSchema extends ZodType<any, any, any> | void = void,
@@ -25,7 +16,7 @@ export type AetherisContext<
     params: ParamsSchema extends ZodType<any, any, any> ? z.infer<ParamsSchema> : Record<string, string>;
 };
 
-export class Procedure<Context extends AetherisContext> {
+export class Aetheris<Context extends AetherisContext> {
     constructor(
         private context: Context = {} as Context,
         private middlewares: Array<Middleware<Context>> = [],
@@ -37,7 +28,7 @@ export class Procedure<Context extends AetherisContext> {
         const newMiddlewares = [...this.middlewares, (context: Context) => createContext(context) ?? {}] as Array<
             (context: Context) => Partial<Context & NewContext> | Promise<Partial<Context & NewContext>>
         >;
-        return new Procedure<Context & NewContext>(this.context as Context & NewContext, newMiddlewares);
+        return new Aetheris<Context & NewContext>(this.context as Context & NewContext, newMiddlewares);
     }
 
     private async applyMiddlewares(context: Context): Promise<Context> {
@@ -50,20 +41,22 @@ export class Procedure<Context extends AetherisContext> {
     }
 
     public validate<Schema extends ZodType<any, any, any> | void = void>(schema: Schema, data: any) {
-        if (schema) {
-            const result = schema.safeParse(data);
-            if (!result.success) {
-                const errorDetails = result.error.errors.map((err) => ({
-                    path: err.path,
-                    message: err.message,
-                }));
-                throw new AetherisError({
-                    status: 400,
-                    message: "Error validating input",
-                    data: errorDetails,
-                });
-            }
-        }
+        if (!schema) return;
+
+        const result = schema.safeParse(data);
+
+        if (result.success) return;
+
+        const errorDetails = result.error.errors.map((err) => ({
+            path: err.path,
+            message: err.message,
+        }));
+
+        throw new AetherisError({
+            status: 400,
+            message: "Error validating input",
+            data: errorDetails,
+        });
     }
 
     public handler<

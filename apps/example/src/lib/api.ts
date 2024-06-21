@@ -1,6 +1,6 @@
-import type { Router } from "@/server";
+import type { App } from "@/server";
 import { createClient } from "@aetheris/client";
 
-export const api = createClient<Router>({
+export const api = createClient<App>({
     baseUrl: "http://localhost:3000/api/",
 });

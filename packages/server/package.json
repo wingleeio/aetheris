@@ -29,5 +29,8 @@
             "adapters/http": "src/adapters/http.ts",
             "adapters/next": "src/adapters/next.ts"
         }
+    },
+    "dependencies": {
+        "ws": "^8.17.1"
     }
 }

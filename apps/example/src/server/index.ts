@@ -1,16 +1,13 @@
-import { createAetheris } from "@aetheris/server";
+import { createAetheris, router } from "@aetheris/server";
+
 import { z } from "zod";
 
 export const createContext = async () => ({});
 
-export const a = createAetheris<typeof createContext>();
+export const aether = createAetheris<typeof createContext>();
 
-export const procedure = a.procedure.use(({ path }) => {
-    console.log(`Handling request to ${path}`);
-});
-
-export const router = a.router({
-    helloWorld: procedure.handler({
+export const app = router({
+    helloWorld: aether.handler({
         input: z.object({
             name: z.string(),
         }),
@@ -22,4 +19,4 @@ export const router = a.router({
     }),
 });
 
-export type Router = typeof router;
+export type App = typeof app;
