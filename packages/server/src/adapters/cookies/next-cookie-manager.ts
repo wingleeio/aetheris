@@ -50,7 +50,6 @@ export class NextCookieManager implements CookieManager {
 
     delete(name: string): void {
         this.set(name, "", { expires: new Date(0) });
-        this.cookies.delete(name);
     }
 
     getSetCookieHeader(): string[] {

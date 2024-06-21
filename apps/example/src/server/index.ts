@@ -5,8 +5,12 @@ export const createContext = async () => ({});
 
 export const a = createAetheris<typeof createContext>();
 
+export const procedure = a.procedure.use(({ path }) => {
+    console.log(`Handling request to ${path}`);
+});
+
 export const router = a.router({
-    helloWorld: a.procedure.handler({
+    helloWorld: procedure.handler({
         input: z.object({
             name: z.string(),
         }),

@@ -49,6 +49,23 @@ export class Procedure<Context extends AetherisContext> {
         return accumulatedContext;
     }
 
+    public validate<Schema extends ZodType<any, any, any> | void = void>(schema: Schema, data: any) {
+        if (schema) {
+            const result = schema.safeParse(data);
+            if (!result.success) {
+                const errorDetails = result.error.errors.map((err) => ({
+                    path: err.path,
+                    message: err.message,
+                }));
+                throw new AetherisError({
+                    status: 400,
+                    message: "Error validating input",
+                    data: errorDetails,
+                });
+            }
+        }
+    }
+
     public handler<
         R,
         InputSchema extends ZodType<any, any, any> | void = void,
@@ -72,52 +89,12 @@ export class Procedure<Context extends AetherisContext> {
                     ...(await this.applyMiddlewares({ ...this.context, ...defaultContext })),
                 };
 
-                if (input) {
-                    const result = input.safeParse(data);
-                    if (!result.success) {
-                        const errorDetails = result.error.errors.map((err) => ({
-                            path: err.path,
-                            message: err.message,
-                        }));
-                        throw new AetherisError({
-                            status: 400,
-                            message: "Error validating input",
-                            data: errorDetails,
-                        });
-                    }
-                }
-
-                if (params) {
-                    const result = params.safeParse(context.params);
-                    if (!result.success) {
-                        const errorDetails = result.error.errors.map((err) => ({
-                            path: err.path,
-                            message: err.message,
-                        }));
-                        throw new AetherisError({
-                            status: 400,
-                            message: "Error validating params",
-                            data: errorDetails,
-                        });
-                    }
-                }
+                this.validate(input, data);
+                this.validate(params, context.params);
 
                 const response = await resolve({ ...context, input: data });
 
-                if (output) {
-                    const outputResult = output.safeParse(response);
-                    if (!outputResult.success) {
-                        const errorDetails = outputResult.error.errors.map((err) => ({
-                            path: err.path,
-                            message: err.message,
-                        }));
-                        throw new AetherisError({
-                            status: 500,
-                            message: "Error validating output",
-                            data: errorDetails,
-                        });
-                    }
-                }
+                this.validate(output, response);
 
                 return {
                     status: 200,

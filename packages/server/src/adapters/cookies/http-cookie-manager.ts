@@ -1,5 +1,5 @@
-import { CookieManager, CookieOptions } from "../../core";
 import type { IncomingMessage, ServerResponse } from "http";
+import { CookieManager, CookieOptions } from "../../core";
 
 export class HttpCookieManager implements CookieManager {
     constructor(
@@ -70,32 +70,6 @@ export class HttpCookieManager implements CookieManager {
     }
 
     delete(name: string, options: CookieOptions = {}): void {
-        let cookieString = `${name}=; Expires=Thu, 01 Jan 1970 00:00:00 GMT`;
-
-        if (options.domain) {
-            cookieString += `; Domain=${options.domain}`;
-        }
-        if (options.path) {
-            cookieString += `; Path=${options.path}`;
-        } else {
-            cookieString += `; Path=/`;
-        }
-        if (options.secure) {
-            cookieString += `; Secure`;
-        }
-        if (options.httpOnly) {
-            cookieString += `; HttpOnly`;
-        }
-
-        const existingSetCookieHeader = this.res.getHeader("Set-Cookie");
-        if (existingSetCookieHeader) {
-            if (Array.isArray(existingSetCookieHeader)) {
-                this.res.setHeader("Set-Cookie", [...existingSetCookieHeader, cookieString]);
-            } else {
-                this.res.setHeader("Set-Cookie", [existingSetCookieHeader.toString(), cookieString]);
-            }
-        } else {
-            this.res.setHeader("Set-Cookie", cookieString);
-        }
+        this.set(name, "", { ...options, expires: new Date(0) });
     }
 }
