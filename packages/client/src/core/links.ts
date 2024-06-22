@@ -78,7 +78,7 @@ export const loggerLink = (): Link => {
             complete: "background: #34d399; color: white; padding: 5px 16px 5px 16px;",
         };
 
-        console.group(
+        console.groupCollapsed(
             `%c#${current} %c%s %c%s %c(%s)`,
             styles.group,
             styles.header,
@@ -97,7 +97,7 @@ export const loggerLink = (): Link => {
 
         const elapsed = new Date().getTime() - now.getTime();
 
-        console.group(
+        console.groupCollapsed(
             `%c#${current} %c%s %c%s %c(%dms)`,
             styles.group,
             styles.header,

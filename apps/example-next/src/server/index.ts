@@ -11,7 +11,8 @@ export const app = router({
         input: z.object({
             name: z.string(),
         }),
-        resolve: async ({ input }) => {
+        resolve: async ({ input, cookies }) => {
+            console.log(cookies.get("random"));
             return {
                 message: `Hello from Aetheris, ${input.name}!`,
             };

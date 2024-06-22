@@ -1,4 +1,5 @@
 import { createAetheris, router } from "@aetheris/server";
+import { createClient, loggerLink, wsLink } from "@aetheris/client";
 
 import WebSocket from "ws";
 import { applyWSSHandler } from "@aetheris/server/adapters/ws";
@@ -41,16 +42,36 @@ const handler = createHTTPHandler({
 
 const server = createServer(handler);
 
+const wss = new WebSocket.Server({ server });
+
 applyWSSHandler({
     app,
-    wss: new WebSocket.Server({ server }),
+    wss,
     createContext,
     keepAlive: {
         pingIntervalMs: 1000,
         pongWaitMs: 5000,
     },
 });
+type App = typeof app;
 
 server.listen(3002, () => {
     logger.info("Server listening on port 3002");
+
+    const client = createClient<App>({
+        links: [
+            wsLink({
+                baseUrl: "ws://localhost:3002/",
+            }),
+        ],
+    });
+
+    client
+        .helloWorld({
+            name: "hi",
+        })
+        .then((response) => {
+            logger.info(response, "Response from server");
+        })
+        .catch(console.log);
 });
