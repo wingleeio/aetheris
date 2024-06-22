@@ -1,11 +1,11 @@
 import { createAetheris, router } from "@aetheris/server";
 
-import WebSocket from "ws";
-import { applyWSSHandler } from "@aetheris/server/adapters/ws";
+import { createClient, loggerLink, wsLink } from "@aetheris/client";
 import { createHTTPHandler } from "@aetheris/server/adapters/http";
+import { applyWSSHandler } from "@aetheris/server/adapters/ws";
 import { createServer } from "http";
-import { createWSSClient } from "@aetheris/client";
 import pino from "pino";
+import WebSocket from "ws";
 import { z } from "zod";
 
 const logger = pino({
@@ -33,6 +33,15 @@ export const app = router({
             };
         },
     }),
+    test: {
+        ["id:"]: withLogger.handler({
+            resolve: async () => {
+                return {
+                    message: "Test",
+                };
+            },
+        }),
+    },
 });
 
 const handler = createHTTPHandler({
@@ -48,17 +57,31 @@ applyWSSHandler({
     app,
     wss,
     createContext,
+    keepAlive: {
+        pingIntervalMs: 1000,
+        pongWaitMs: 5000,
+    },
 });
+type App = typeof app;
 
-server.listen(3002, () => logger.info("Server listening on port 3002"));
+server.listen(3002, () => {
+    logger.info("Server listening on port 3002");
 
-const client = createWSSClient<typeof app>({
-    baseUrl: "ws://localhost:3002",
+    const client = createClient<App>({
+        links: [
+            loggerLink(),
+            wsLink({
+                baseUrl: "ws://localhost:3002/",
+            }),
+        ],
+    });
+
+    client
+        .helloWorld({
+            name: "hi",
+        })
+        .then((response) => {
+            logger.info(response, "Response from server");
+        })
+        .catch(console.log);
 });
-
-client
-    .helloWorld({ name: "Alice" })
-    .then((response) => {
-        console.log(response);
-    })
-    .catch(console.log);

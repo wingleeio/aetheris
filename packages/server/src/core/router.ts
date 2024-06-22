@@ -1,6 +1,7 @@
 import { ProcedureResponse } from "./procedure-response";
 
-type TransformKey<Key> = Key extends `${infer Prefix}:` ? `${Prefix}:${string}` : Key;
+// TODO: Re-implement this type
+// type TransformKey<Key> = Key extends `${infer Prefix}:` ? `${Prefix}:${string}` : Key;
 
 type TransformResponse<R> = R extends Promise<ProcedureResponse<infer Data>> ? Promise<Data> : R;
 
@@ -14,7 +15,7 @@ type Resolver<IO extends { input: any; output: any }> = (input: IO["input"]) => 
 
 type AetherRouter<Router> = Router extends object
     ? {
-          [Key in keyof Router as TransformKey<Key>]: Router[Key] extends Function
+          [Key in keyof Router]: Router[Key] extends Function
               ? RemapFunction<Router[Key]> extends (input: infer Input) => Promise<infer Output>
                   ? Resolver<{ input: Input; output: Output }>
                   : RemapFunction<Router[Key]>
