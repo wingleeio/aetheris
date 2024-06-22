@@ -1,6 +1,12 @@
+import { createClient, httpLink, loggerLink } from "@aetheris/client";
+
 import type { App } from "@/server";
-import { createClient } from "@aetheris/client";
 
 export const api = createClient<App>({
-    baseUrl: "http://localhost:3000/api/",
+    links: [
+        loggerLink(),
+        httpLink({
+            baseUrl: "http://localhost:3000/api/",
+        }),
+    ],
 });

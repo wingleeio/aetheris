@@ -1,11 +1,10 @@
 import { createAetheris, router } from "@aetheris/server";
 
-import { createClient, loggerLink, wsLink } from "@aetheris/client";
-import { createHTTPHandler } from "@aetheris/server/adapters/http";
+import WebSocket from "ws";
 import { applyWSSHandler } from "@aetheris/server/adapters/ws";
+import { createHTTPHandler } from "@aetheris/server/adapters/http";
 import { createServer } from "http";
 import pino from "pino";
-import WebSocket from "ws";
 import { z } from "zod";
 
 const logger = pino({
@@ -33,15 +32,6 @@ export const app = router({
             };
         },
     }),
-    test: {
-        ["id:"]: withLogger.handler({
-            resolve: async () => {
-                return {
-                    message: "Test",
-                };
-            },
-        }),
-    },
 });
 
 const handler = createHTTPHandler({
@@ -51,37 +41,16 @@ const handler = createHTTPHandler({
 
 const server = createServer(handler);
 
-const wss = new WebSocket.Server({ server });
-
 applyWSSHandler({
     app,
-    wss,
+    wss: new WebSocket.Server({ server }),
     createContext,
     keepAlive: {
         pingIntervalMs: 1000,
         pongWaitMs: 5000,
     },
 });
-type App = typeof app;
 
 server.listen(3002, () => {
     logger.info("Server listening on port 3002");
-
-    const client = createClient<App>({
-        links: [
-            loggerLink(),
-            wsLink({
-                baseUrl: "ws://localhost:3002/",
-            }),
-        ],
-    });
-
-    client
-        .helloWorld({
-            name: "hi",
-        })
-        .then((response) => {
-            logger.info(response, "Response from server");
-        })
-        .catch(console.log);
 });
