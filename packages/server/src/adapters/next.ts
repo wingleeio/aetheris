@@ -1,18 +1,18 @@
 import { createRouterMap, getMatch } from "../core";
 
-import { NextRequest } from "next/server";
 import { NextCookieManager } from "./cookies/next-cookie-manager";
+import { NextRequest } from "next/server";
 
 export const createNextHandler = <Router extends object>({
-    router,
+    app,
     createContext = async () => ({}),
     prefix,
 }: {
-    router: Router;
+    app: Router;
     createContext?: (req: NextRequest) => Promise<any> | any;
     prefix?: string;
 }) => {
-    const map = createRouterMap(router);
+    const map = createRouterMap(app);
     return async (req: NextRequest) => {
         const url = new URL(req.url!);
         const path = prefix ? url.pathname.replace(prefix, "") : url.pathname;

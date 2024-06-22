@@ -11,6 +11,7 @@
         ".": "./dist/index.js",
         "./adapters/http": "./dist/adapters/http.js",
         "./adapters/next": "./dist/adapters/next.js",
+        "./adapters/ws": "./dist/adapters/ws.js",
         "./core": "./dist/core/index.js"
     },
     "scripts": {
@@ -19,6 +20,7 @@
     },
     "devDependencies": {
         "@types/node": "^20.14.2",
+        "@types/ws": "^8.5.10",
         "next": "^14.2.4",
         "typescript": "^5.4.5",
         "zod": "^3.23.8"
@@ -27,7 +29,8 @@
         "entryPoints": {
             "index": "src/index.ts",
             "adapters/http": "src/adapters/http.ts",
-            "adapters/next": "src/adapters/next.ts"
+            "adapters/next": "src/adapters/next.ts",
+            "adapters/ws": "src/adapters/ws.ts"
         }
     },
     "dependencies": {

@@ -1,8 +1,8 @@
+import { app } from "@/server";
 import { createNextHandler } from "@aetheris/server/adapters/next";
-import { router } from "@/server";
 
 const handler = createNextHandler({
-    router,
+    app,
     prefix: "/api",
 });
 
