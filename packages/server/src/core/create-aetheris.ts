@@ -1,4 +1,4 @@
-import { Aetheris, AetherisContext } from "./procedure";
+import { Aetheris, AetherisContext } from "./aetheris";
 
 type Resolved<T> = T extends PromiseLike<infer U> ? U : T;
 
