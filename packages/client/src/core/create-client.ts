@@ -1,32 +1,10 @@
-type RemoveDefaultContext<T> = T extends object
-    ? {
-          [K in keyof T]: T[K] extends (...args: infer Args) => infer R
-              ? Args extends [infer InputData, ...infer Rest]
-                  ? Rest extends [any?]
-                      ? (input: InputData) => R
-                      : T[K]
-                  : T[K]
-              : RemoveDefaultContext<T[K]>;
-      }
-    : T;
-
-type AetherClient<T> = RemoveDefaultContext<{
-    [K in keyof T]: T[K] extends (...args: infer Args) => infer R
-        ? Args extends [infer InputData, ...infer Rest]
-            ? Rest extends [any?]
-                ? (input: InputData) => R
-                : T[K]
-            : T[K] extends object
-              ? AetherClient<T[K]>
-              : T[K]
-        : T[K];
-}>;
+import { Link } from "./links";
 
 export type CreateClientConfiguration = {
-    baseUrl: string;
+    links: Link[];
 };
 
-export const createClient = <Router extends object>(config?: CreateClientConfiguration): AetherClient<Router> => {
+export const createClient = <Router extends object>(config: CreateClientConfiguration): Router => {
     const buildClient = <T>(props: string[]): T => {
         const fn = function () {
             return props;
@@ -39,16 +17,39 @@ export const createClient = <Router extends object>(config?: CreateClientConfigu
                 }
                 return buildClient([...props, prop]);
             },
-            apply: async (target, thisArg, args) => {
+            apply: (target, thisArg, args) => {
                 const path: string[] = target();
-                return fetch((config ? config.baseUrl ?? "" : "") + path.join("/"), {
-                    method: "POST",
-                    body: JSON.stringify(args[0]),
-                    headers: { "Content-Type": "application/json" },
-                    cache: "no-cache",
-                }).then((res) => res.json());
+
+                let method = "POST";
+
+                if (path[path.length - 1] === "subscribe") {
+                    path.pop();
+                    method = "SUBSCRIBE";
+                }
+
+                let index = -1;
+                const executeLink = (i: number): any => {
+                    if (i <= index) throw new Error("next() called multiple times");
+                    index = i;
+                    const link = config.links[i];
+                    if (link) {
+                        const result = link({
+                            path: "/" + path.join("/"),
+                            args: args[0],
+                            method,
+                            next: () => executeLink(i + 1),
+                        });
+                        if (result instanceof Promise) {
+                            return result;
+                        }
+                        return result;
+                    }
+                    return Promise.resolve(null);
+                };
+
+                return executeLink(0);
             },
         });
     };
-    return buildClient<AetherClient<Router>>([]);
+    return buildClient<Router>([]);
 };

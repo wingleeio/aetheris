@@ -1,0 +1,56 @@
+# Client
+
+The Aetheris client library allows you to create the fully typesafe client for your Aetheris server. 
+
+## Creating the client
+
+Earlier in our [quick start guide](/guide/getting-started), we created a new Aetheris server and defined our application
+router. We also exported a type that represents our router. This type can be used to create our client.
+
+```ts filename="src/lib/api.ts" {0-2, 4-11} copy
+import type { App } from "@/server";
+import { createClient, httpLink } from "@aetheris/client";
+
+export const api = createClient<App>({
+    links:[
+        httpLink({
+            baseUrl: "http://localhost:3000/api",
+        }),
+    ],
+});
+```
+
+With the client created, you can now import the `api` object and call your API routes. The client will automatically infer
+any inputs or outputs from the api endpoints you created.
+
+The createClient function also supports other transports such as websockets using `wsLink`.
+
+```ts filename="src/lib/api.ts" {2, 4-11} copy
+import type { App } from "@/server";
+import { createClient, wsLink } from "@aetheris/client";
+
+export const api = createClient<App>({
+    links:[
+        wsLink({
+            baseUrl: "ws://localhost:3000",
+        }),
+    ],
+});
+```
+
+For additional debugging, you can also add the `loggingLink` to your client. This will log the requests and responses to the console.
+Links are called in order, so make sure the logging link is place before the transport link.
+
+```ts filename="src/lib/api.ts" {2, 6} copy
+import type { App } from "@/server";
+import { createClient, wsLink, loggingLink } from "@aetheris/client";
+
+export const api = createClient<App>({
+    links:[
+        loggingLink(),
+        wsLink({
+            baseUrl: "ws://localhost:3000",
+        }),
+    ],
+});
+```

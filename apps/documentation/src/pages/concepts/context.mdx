@@ -1,0 +1,68 @@
+import Link from "next/link";
+import { Callout } from "nextra/components";
+
+# Context
+
+The context object contains all the variables related to the current request. It's passed as an argument to the resolver
+function of a procedure so that you can interact with the context in your API routes.
+
+<Callout type="info" emoji="ℹ️">
+    To learn how you can add conditional properties to the context object, see the [middleware](/concepts/middleware) documentation.
+</Callout>
+
+## Defining your context
+
+Earlier in our [quick start guide](/guide/getting-started), we created a new Aetheris server and defined a base router with no context. By default, the
+context will only have access to properties such as `input`, `params`, `path`, etc. If you want, you can add custom properties to the context object by creating
+a context creator function. This function may vary depending on the http framework you are using Aetheris with, but the concept remains the same.
+
+The context creator can be useful if you need to past information from the underlying frameworks api to your Aetheris server, such as from middleware that may be
+exclusive to that framework. It can also add custom additional properties to the context object that may be useful in your API routes.
+
+<Callout type="info" emoji="ℹ️">
+    The request object type from Next.js is not mandatory, but can be useful if you need to access the request object in your API routes.
+</Callout>
+
+```ts filename="src/server/index.ts" {5-9, 14-20} copy
+import { createAetheris, router } from "@aetheris/server";
+import { NextRequest } from "next/server";
+
+// Create the context creator function
+export const createContext = (req: NextRequest) => ({
+    logger: (message: string) => {
+        console.log(`[${new Date().toISOString()}] ${message}`);
+    },
+})
+
+const aether = createAetheris<typeof createContext>();
+
+export const app = router({
+    // Access the context in your resolver
+    helloWorld: aether.handler({
+        resolver: ({ logger }) => {
+            logger(`helloWorld was called.`);
+            return `Hello, World!`;
+        },
+    }),
+});
+
+export type App = typeof app;
+```
+
+In order for the context creator to be used, it has to passed to the handler creator function when creating the handler for
+your respective framework. For example, in Next.js, you would pass the context creator to the `createHandler` function.
+
+```ts filename="src/app/api/[[...slug]]/route.ts" {6} copy
+import { createNextHandler } from "@aetheris/server/adapters/next";
+import { app, createContext } from "@/server";
+
+const handler = createNextHandler({
+    app,
+    createContext,
+    prefix: "/api",
+});
+
+export const POST = handler;
+```
+
+Now the logger will be called as expected when the `helloWorld` procedure is called.

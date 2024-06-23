@@ -1,0 +1,23 @@
+{
+    "name": "example-http",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+        "dev": "tsx --watch src/index.ts"
+    },
+    "dependencies": {
+        "@aetheris/client": "*",
+        "@aetheris/server": "*",
+        "pino": "^9.2.0",
+        "ws": "^8.17.1",
+        "zod": "^3.23.8"
+    },
+    "devDependencies": {
+        "@types/node": "^20",
+        "@types/react": "^18",
+        "@types/react-dom": "^18",
+        "@types/ws": "^8.5.10",
+        "pino-pretty": "^11.2.1",
+        "typescript": "^5"
+    }
+}

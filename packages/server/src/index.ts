@@ -1,1 +1,1 @@
-export { createAether } from "./core";
+export { AetherisError, createAetheris, router } from "./core";

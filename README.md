@@ -1,81 +1,131 @@
-# Turborepo starter
+# Aetheris Monorepo
 
-This is an official starter Turborepo.
+Welcome to the Aetheris monorepo! Aetheris is split into two main packages: `@aetheris/server` and `@aetheris/client`. The server package is used to define your API in the backend and the client package is used to call your API on the frontend. Depending on your project, you may want to install these packages into their respective applications.
 
-## Using this example
+## System Requirements
 
-Run the following command:
+-   Node.js 18.17 or later
 
-```sh
-npx create-turbo@latest
+## Installation
+
+To install the necessary packages, run the following command:
+
+```bash
+pnpm add @aetheris/server @aetheris/client
 ```
 
-## What's inside?
+## Quick Start
 
-This Turborepo includes the following packages/apps:
+Setting up Aetheris is simple and doesn't require much boilerplate. Let's break down everything we need to do to get started.
 
-### Apps and Packages
+### Creating the Router
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+In an existing Next.js project, create a new file. This can be anywhere in your project, but for this example we will create a new directory and create an `index.ts` file.
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+In this file, import `createAetheris` to create a new Aetheris server.
 
-### Utilities
+```typescript
+// src/server/index.ts
+import { createAetheris } from "@aetheris/server";
 
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-```
-cd my-turborepo
-pnpm build
+export const aether = createAetheris();
 ```
 
-### Develop
+This function returns a class containing utilities to assist in building your application. These will be used to define your API. Let's begin with creating our base router.
 
-To develop all apps and packages, run the following command:
+```typescript
+// src/server/index.ts
+import { createAetheris, router } from "@aetheris/server";
 
-```
-cd my-turborepo
-pnpm dev
-```
+const aether = createAetheris();
 
-### Remote Caching
+export const app = router({});
 
-Turborepo can use a technique known as [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup), then enter the following commands:
-
-```
-cd my-turborepo
-npx turbo login
+export type App = typeof app;
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+We also export the inferred type of the router so that we can import it in the future to create our API client.
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+Next, we can create our first procedure. For now, we'll create a basic hello world procedure.
 
+```typescript
+// src/server/index.ts
+import { createAetheris, router } from "@aetheris/server";
+
+const aether = createAetheris();
+
+export const app = router({
+    helloWorld: aether.handler({
+        resolve: async () => {
+            return "Hello, World!";
+        },
+    }),
+});
+
+export type App = typeof app;
 ```
-npx turbo link
+
+### Creating a Route Handler
+
+Now that we've created a basic procedure, we can expose this API by creating a Next.js route handler.
+
+Create the new file in a directory like `src/app/api/[[...slug]]/route.ts`.
+
+Import the `router` object we created earlier and the `createNextHandler` function from the `@aetheris/server` package.
+The `createNextHandler` function will create a new Next.js route handler that you can assign to the POST method of your route.
+
+```typescript
+// src/app/api/[[...slug]]/route.ts
+import { createNextHandler } from "@aetheris/server/adapters/next";
+import { app } from "@/server";
+
+const handler = createNextHandler({
+    app,
+    // We have to set a prefix to let Aetheris know where the route is located.
+    prefix: "/api",
+});
+
+export const POST = handler;
 ```
 
-## Useful Links
+### Creating the API Client
 
-Learn more about the power of Turborepo:
+After creating this file, we still need a method to call the API.
 
-- [Tasks](https://turbo.build/repo/docs/core-concepts/monorepos/running-tasks)
-- [Caching](https://turbo.build/repo/docs/core-concepts/caching)
-- [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching)
-- [Filtering](https://turbo.build/repo/docs/core-concepts/monorepos/filtering)
-- [Configuration Options](https://turbo.build/repo/docs/reference/configuration)
-- [CLI Usage](https://turbo.build/repo/docs/reference/command-line-reference)
+Create a new file in a directory like `src/lib/api.ts`.
+
+Import the `createClient` function from the `@aetheris/client` package.
+
+This function takes a generic type that represents the router object. We can import the `App` type we exported earlier to use as the generic type. For this example, we will hardcode the base URL, but you will likely need some additional logic to determine the base URL based on the environment.
+
+```typescript
+// src/lib/api.ts
+import type { App } from "@/server";
+import { createClient } from "@aetheris/client";
+
+export const api = createClient<App>({
+    // You will need to change this URL in your project.
+    baseUrl: "http://localhost:3000/api/",
+});
+```
+
+### Calling our API
+
+That's it! We've done everything we need to get started with Aetheris. You can now call the API from anywhere in your project by importing the `api` object we created earlier. If everything is set up correctly, the API client should be fully typed and will reflect any procedures you define in the server.
+
+```typescript
+// src/app/page.tsx
+export default async function Page() {
+    const response = await api.helloWorld(); // Hello World!
+
+    return (
+      <div>{response}</div>
+    );
+}
+```
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
+
+---

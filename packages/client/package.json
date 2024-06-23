@@ -1,15 +1,21 @@
 {
-    "name": "@aether/client",
-    "version": "0.0.1",
+    "name": "@aetheris/client",
+    "version": "0.0.8",
     "license": "MIT",
     "type": "module",
-    "main": "dist/index.js",
+    "main": "./dist/index.js",
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
     "exports": {
         "./package.json": "./package.json",
         ".": "./dist/index.js"
     },
     "scripts": {
-        "dev": "tsc --watch",
-        "build": "tsc"
+        "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+        "build": "tsup src/index.ts --format cjs,esm --dts"
+    },
+    "devDependencies": {
+        "@types/ws": "^8.5.10",
+        "tsup": "^8.1.0"
     }
 }
