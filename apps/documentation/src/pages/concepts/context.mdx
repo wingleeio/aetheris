@@ -24,7 +24,7 @@ exclusive to that framework. It can also add custom additional properties to the
 </Callout>
 
 ```ts filename="src/server/index.ts" {5-9, 14-20} copy
-import { createAetheris } from "@aetheris/server";
+import { createAetheris, router } from "@aetheris/server";
 import { NextRequest } from "next/server";
 
 // Create the context creator function
@@ -34,11 +34,11 @@ export const createContext = (req: NextRequest) => ({
     },
 })
 
-const a = createAetheris();
+const aether = createAetheris<typeof createContext>();
 
-export const router = a.router({
+export const app = router({
     // Access the context in your resolver
-    helloWorld: a.procedure({
+    helloWorld: aether.handler({
         resolver: ({ logger }) => {
             logger(`helloWorld was called.`);
             return `Hello, World!`;
@@ -46,7 +46,7 @@ export const router = a.router({
     }),
 });
 
-export type Router = typeof router;
+export type App = typeof app;
 ```
 
 In order for the context creator to be used, it has to passed to the handler creator function when creating the handler for
@@ -54,10 +54,10 @@ your respective framework. For example, in Next.js, you would pass the context c
 
 ```ts filename="src/app/api/[[...slug]]/route.ts" {6} copy
 import { createNextHandler } from "@aetheris/server/adapters/next";
-import { router, createContext } from "@/server";
+import { app, createContext } from "@/server";
 
 const handler = createNextHandler({
-    router,
+    app,
     createContext,
     prefix: "/api",
 });

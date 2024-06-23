@@ -14,13 +14,13 @@ Earlier in our [quick start guide](/guide/getting-started), we created a new Aet
 of our handlers take any input or have any validation. Let's expand on what we created so that we can validate the users input.
 
 ```ts filename="src/server/index.ts" {2, 8-13} copy
-import { createAetheris } from "@aetheris/server";
+import { createAetheris, router } from "@aetheris/server";
 import { z } from "zod";
 
-const a = createAetheris();
+const aether = createAetheris();
 
-export const router = a.router({
-    helloWorld: a.procedure.handler({
+export const app = router({
+    helloWorld: aether.handler({
         input: z.object({
             name: z.string(),
         }),
@@ -30,7 +30,7 @@ export const router = a.router({
     }),
 });
 
-export type Router = typeof router;
+export type App = typeof app;
 ```
 
 The validation schema will now validate that the input object has a `name` property that is a string. If the input object does not
@@ -57,9 +57,9 @@ if you provide a `output` schema, the return value will be validated against the
 value.
 
 ```ts filename="src/server/index.ts" {7-10} copy
-export const router = a.router({
+export const app = router({
     users: {
-        getUser: a.procedure.handler({
+        getUser: aether.handler({
             input: z.object({
                 id: z.string(),
             }),
