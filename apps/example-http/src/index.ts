@@ -34,14 +34,13 @@ export const app = router({
         },
     }),
     counter: withLogger.subscription({
-        output: z.object({
-            message: z.string(),
-        }),
-        resolve: async ({ emit }) => {
+        input: z.number(),
+        output: z.string(),
+        resolve: async ({ emit, input }) => {
             let count = 1;
             const interval = setInterval(() => {
-                emit({ message: `Sent ${count++} messages!` });
-            }, 1000);
+                emit(`Sent ${count++} messages!`);
+            }, input);
             return () => {
                 clearInterval(interval);
             };
@@ -80,9 +79,8 @@ server.listen(3002, async () => {
     });
 
     const unsubscribe = client.counter.subscribe({
-        onMessage: (message) => {
-            console.log(message);
-        },
+        input: 1000,
+        onMessage: (message) => {},
     });
 
     setTimeout(() => {

@@ -139,7 +139,9 @@ export const applyWSSHandler = <Router extends object>({
 
         ws.on("close", () => {
             unsubscribers.forEach((unsubscriber) => {
-                unsubscriber();
+                if (typeof unsubscriber === "function") {
+                    unsubscriber();
+                }
             });
         });
     });

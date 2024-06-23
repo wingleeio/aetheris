@@ -1,5 +1,17 @@
 # @aetheris/client
 
+## 0.0.7
+
+### Patch Changes
+
+-   Fix bug causing websocket server to crash
+
+## 0.0.6
+
+### Patch Changes
+
+-   Add logging for receiving messages from subscription
+
 ## 0.0.5
 
 ### Patch Changes

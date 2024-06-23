@@ -154,6 +154,24 @@ export const loggerLink = (): Link => {
         });
         console.groupEnd();
 
+        if (args.onMessage) {
+            args.onMessage = (message: any) => {
+                console.groupCollapsed(
+                    `%c#${current} %c%s %c%s %c(%s)`,
+                    styles.group,
+                    styles.header,
+                    "Received Message",
+                    styles.path,
+                    path,
+                    styles.complete,
+                    "listening",
+                );
+                console.log(message);
+                console.groupEnd();
+                onMessage(message);
+            };
+        }
+
         if (method === "SUBSCRIBE") {
             const unsubscribe = next() as () => void;
             return () => {
