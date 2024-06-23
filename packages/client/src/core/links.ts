@@ -10,9 +10,32 @@ export type TransportLinkConfiguration = {
     baseUrl?: string;
 };
 
+export type HttpLinkConfiguration = TransportLinkConfiguration & {
+    headers?: () => Promise<Headers | undefined> | Headers | undefined;
+};
+
+export type WebsocketLinkConfiguration = TransportLinkConfiguration & {
+    reconnectIntervalMs?: number;
+    maxReconnectionAttempts?: number;
+    lazy?: boolean;
+};
+
 export const httpLink =
-    (config?: TransportLinkConfiguration): Link =>
+    (config?: HttpLinkConfiguration): Link =>
     async ({ path, args, next }) => {
+        let headers = new Headers({
+            "Content-Type": "application/json",
+        });
+
+        if (config?.headers) {
+            const customHeaders = await config.headers();
+            if (customHeaders) {
+                customHeaders.forEach((value, key) => {
+                    headers.set(key, value);
+                });
+            }
+        }
+
         return fetch((config ? config.baseUrl ?? "" : "") + path, {
             method: "POST",
             body: JSON.stringify(args),
@@ -24,37 +47,76 @@ export const httpLink =
             .catch((err) => err);
     };
 
-export const wsLink = (config?: TransportLinkConfiguration): Link => {
+export const wsLink = (config?: WebsocketLinkConfiguration): Link => {
     let WebSocket: typeof globalThis.WebSocket;
     if (typeof window !== "undefined" && window.WebSocket) {
         WebSocket = window.WebSocket;
     } else {
         WebSocket = require("ws");
     }
-    const ws = new WebSocket(config?.baseUrl ?? "");
 
     let nextId = 1;
     const pending = new Map<number, { resolve: Function; reject: Function }>();
-    const subscriptions = new Map<number, Function>();
+    const subscriptions = new Map<
+        number,
+        {
+            message: any;
+            onMessage: Function;
+        }
+    >();
+    let ws: WebSocket;
 
-    ws.addEventListener("message", (event: any) => {
-        const response = JSON.parse(event.data);
-        const request = pending.get(response.id);
-        const subscription = subscriptions.get(response.id);
-        if (request) {
-            if (response.body.status >= 200 && response.body.status < 300) {
-                request.resolve(response.body.data);
-            } else {
-                request.reject(response);
+    const reconnectInterval = config?.reconnectIntervalMs ?? 5000;
+    const maxReconnectAttempts = config?.maxReconnectionAttempts ?? 5;
+    let reconnectAttempts = 0;
+
+    const messageQueue: any[] = [];
+    let isConnecting = false;
+
+    const connect = () => {
+        if (isConnecting) return;
+        isConnecting = true;
+
+        ws = new WebSocket(config?.baseUrl ?? "");
+
+        ws.addEventListener("message", (event: any) => {
+            const response = JSON.parse(event.data);
+            const request = pending.get(response.id);
+            const subscription = subscriptions.get(response.id);
+            if (request) {
+                if (response.body.status >= 200 && response.body.status < 300) {
+                    request.resolve(response.body.data);
+                } else {
+                    request.reject(response);
+                }
+                pending.delete(response.id);
             }
-            pending.delete(response.id);
-        }
-        if (subscription) {
-            subscription(response.body.data);
-        }
-    });
+            if (subscription) {
+                subscription.onMessage(response.body.data);
+            }
+        });
 
-    const waitForWebSocketReady = (ws: WebSocket) => {
+        ws.addEventListener("open", () => {
+            reconnectAttempts = 0;
+            isConnecting = false;
+            subscriptions.forEach(({ message }) => {
+                ws.send(JSON.stringify(message));
+            });
+            flushMessageQueue();
+        });
+
+        ws.addEventListener("close", handleReconnect);
+        ws.addEventListener("error", handleReconnect);
+    };
+
+    const flushMessageQueue = () => {
+        while (messageQueue.length > 0 && ws.readyState === WebSocket.OPEN) {
+            const message = messageQueue.shift();
+            ws.send(JSON.stringify(message));
+        }
+    };
+
+    const waitForWebSocketReady = () => {
         return new Promise<void>((resolve, reject) => {
             if (ws.readyState === WebSocket.OPEN) {
                 resolve();
@@ -73,7 +135,32 @@ export const wsLink = (config?: TransportLinkConfiguration): Link => {
         });
     };
 
+    const handleReconnect = () => {
+        if (reconnectAttempts < maxReconnectAttempts) {
+            setTimeout(() => {
+                reconnectAttempts++;
+                connect();
+            }, reconnectInterval);
+        } else {
+            console.error("Max reconnect attempts reached. Giving up.");
+        }
+    };
+
+    const ensureConnected = () => {
+        if (!ws || ws.readyState !== WebSocket.OPEN) {
+            connect();
+        }
+    };
+
+    if (config?.lazy !== true) {
+        connect();
+    }
+
     return ({ path, args, method }) => {
+        if (config?.lazy === true) {
+            ensureConnected();
+        }
+
         let input;
 
         if (method === "POST") {
@@ -94,29 +181,35 @@ export const wsLink = (config?: TransportLinkConfiguration): Link => {
         };
 
         if (method === "POST") {
-            return waitForWebSocketReady(ws).then(() => {
+            return waitForWebSocketReady().then(() => {
                 return new Promise((resolve, reject) => {
                     pending.set(id, { resolve, reject });
-                    ws.send(JSON.stringify(message));
+                    messageQueue.push(message);
+                    flushMessageQueue();
                 });
             });
         }
 
         if (method === "SUBSCRIBE") {
-            waitForWebSocketReady(ws).then(() => {
-                subscriptions.set(id, args.onMessage);
-                ws.send(JSON.stringify(message));
+            waitForWebSocketReady().then(() => {
+                subscriptions.set(id, {
+                    message,
+                    onMessage: args.onMessage,
+                });
+                messageQueue.push(message);
+                flushMessageQueue();
             });
             return () => {
-                waitForWebSocketReady(ws).then(() => {
-                    const message = {
+                waitForWebSocketReady().then(() => {
+                    const unsubscribeMessage = {
                         id,
                         method: "UNSUBSCRIBE",
                         body: {
                             path,
                         },
                     };
-                    ws.send(JSON.stringify(message));
+                    messageQueue.push(unsubscribeMessage);
+                    flushMessageQueue();
                     subscriptions.delete(id);
                 });
             };
@@ -209,5 +302,23 @@ export const loggerLink = (): Link => {
                 return response;
             });
         }
+    };
+};
+
+export type MatchLinkConfiguration = {
+    match: (context: LinkContext) => string;
+    links: { [key: string]: Link };
+};
+
+export const matchLink = (config: MatchLinkConfiguration): Link => {
+    return (context: LinkContext) => {
+        const key = config.match(context);
+        const link = config.links[key];
+
+        if (!link) {
+            throw new Error(`No matching link found for key: ${key}`);
+        }
+
+        return link(context);
     };
 };

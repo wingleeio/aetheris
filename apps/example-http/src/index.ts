@@ -74,6 +74,7 @@ server.listen(3002, async () => {
             loggerLink(),
             wsLink({
                 baseUrl: "ws://localhost:3002",
+                lazy: true,
             }),
         ],
     });

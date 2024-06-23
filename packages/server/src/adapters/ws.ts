@@ -1,7 +1,8 @@
 import { createRouterMap, getMatch } from "../core";
 
-import { IncomingMessage } from "http";
+import { IncomingMessage, ServerResponse } from "http";
 import WebSocket from "ws";
+import { HttpCookieManager } from "./cookies/http-cookie-manager";
 
 type Incoming = {
     path: string;
@@ -37,6 +38,8 @@ export const applyWSSHandler = <Router extends object>({
     const map = createRouterMap(app);
 
     wss.on("connection", async (ws: WebSocket.WebSocket, req: IncomingMessage) => {
+        const res = new ServerResponse(req);
+        const cookies = new HttpCookieManager(req, res);
         const shouldKeepAlive = !!keepAlive;
         let isAlive = true;
         let lastPong = Date.now();
@@ -73,6 +76,7 @@ export const applyWSSHandler = <Router extends object>({
                     const context = {
                         path,
                         params,
+                        cookies,
                         ...(await createContext(req)),
                     };
 
