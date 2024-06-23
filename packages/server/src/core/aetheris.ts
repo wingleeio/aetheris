@@ -6,6 +6,8 @@ import { Handler } from "./handler";
 import { Middleware } from "./middleware";
 import { ProcedureResponse } from "./procedure-response";
 
+type SchemaInfer<S, R> = S extends ZodType<any, any, any> ? z.infer<S> : R;
+
 export type AetherisContext<
     InputSchema extends ZodType<any, any, any> | void = void,
     ParamsSchema extends ZodType<any, any, any> | void = void,
@@ -59,6 +61,51 @@ export class Aetheris<Context extends AetherisContext> {
         });
     }
 
+    public subscription<
+        InputSchema extends ZodType<any, any, any> | void = void,
+        OutputSchema extends ZodType<any, any, any> | void = void,
+        ParamsSchema extends ZodType<any, any, any> | void = void,
+        HandlerContext = AetherisContext<InputSchema, ParamsSchema> &
+            Omit<Context, "input" | "params"> & { emit: (data: SchemaInfer<OutputSchema, any>) => void },
+    >(config: {
+        input?: InputSchema;
+        output?: OutputSchema;
+        params?: ParamsSchema;
+        resolve: (context: HandlerContext) => Promise<Function | any> | Function | any;
+    }) {
+        const { input, output, params, resolve } = config;
+        return {
+            subscribe: async (
+                data: InputSchema extends ZodType<any, any, any> ? z.infer<InputSchema> : void,
+                defaultContext: HandlerContext,
+                send: (message: any) => void,
+            ) => {
+                try {
+                    const emit = (data: SchemaInfer<OutputSchema, any>) => {
+                        this.validate(output, data);
+                        send(data);
+                    };
+
+                    const context = {
+                        emit,
+                        ...defaultContext,
+                        ...(await this.applyMiddlewares({ ...this.context, ...defaultContext })),
+                    };
+
+                    this.validate(input, data);
+                    this.validate(params, context.params);
+
+                    return (await resolve({
+                        ...context,
+                        input: data,
+                    })) as unknown as SchemaInfer<OutputSchema, any>;
+                } catch (e) {
+                    return void 0 as unknown as SchemaInfer<OutputSchema, any>;
+                }
+            },
+        };
+    }
+
     public handler<
         R,
         InputSchema extends ZodType<any, any, any> | void = void,
@@ -69,7 +116,7 @@ export class Aetheris<Context extends AetherisContext> {
         input?: InputSchema;
         output?: OutputSchema;
         params?: ParamsSchema;
-        resolve: Handler<HandlerContext, OutputSchema extends ZodType<any, any, any> ? z.infer<OutputSchema> : R>;
+        resolve: Handler<HandlerContext, SchemaInfer<OutputSchema, R>>;
     }) {
         const { input, output, params, resolve } = config;
         return async (

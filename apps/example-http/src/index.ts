@@ -1,11 +1,11 @@
-import { createAetheris, router } from "@aetheris/server";
 import { createClient, loggerLink, wsLink } from "@aetheris/client";
+import { createAetheris, router } from "@aetheris/server";
 
-import WebSocket from "ws";
-import { applyWSSHandler } from "@aetheris/server/adapters/ws";
 import { createHTTPHandler } from "@aetheris/server/adapters/http";
+import { applyWSSHandler } from "@aetheris/server/adapters/ws";
 import { createServer } from "http";
 import pino from "pino";
+import WebSocket from "ws";
 import { z } from "zod";
 
 const logger = pino({
@@ -33,6 +33,20 @@ export const app = router({
             };
         },
     }),
+    counter: withLogger.subscription({
+        output: z.object({
+            message: z.string(),
+        }),
+        resolve: async ({ emit }) => {
+            let count = 1;
+            const interval = setInterval(() => {
+                emit({ message: `Sent ${count++} messages!` });
+            }, 1000);
+            return () => {
+                clearInterval(interval);
+            };
+        },
+    }),
 });
 
 const handler = createHTTPHandler({
@@ -55,23 +69,27 @@ applyWSSHandler({
 });
 type App = typeof app;
 
-server.listen(3002, () => {
-    logger.info("Server listening on port 3002");
-
+server.listen(3002, async () => {
     const client = createClient<App>({
         links: [
+            loggerLink(),
             wsLink({
-                baseUrl: "ws://localhost:3002/",
+                baseUrl: "ws://localhost:3002",
             }),
         ],
     });
 
-    client
-        .helloWorld({
-            name: "hi",
-        })
-        .then((response) => {
-            logger.info(response, "Response from server");
-        })
-        .catch(console.log);
+    const unsubscribe = client.counter.subscribe({
+        onMessage: (message) => {
+            console.log(message);
+        },
+    });
+
+    setTimeout(() => {
+        unsubscribe();
+    }, 5000);
+
+    await client.helloWorld({
+        name: "John",
+    });
 });

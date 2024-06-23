@@ -1,9 +1,10 @@
 export type LinkContext = {
     path: string;
     args: any;
-    next: () => Promise<any>;
+    method: string;
+    next: () => Promise<any> | any;
 };
-export type Link = (context: LinkContext) => Promise<any>;
+export type Link = (context: LinkContext) => Promise<any> | any;
 
 export type TransportLinkConfiguration = {
     baseUrl?: string;
@@ -24,15 +25,37 @@ export const httpLink =
     };
 
 export const wsLink = (config?: TransportLinkConfiguration): Link => {
-    let WebSocket;
+    let WebSocket: typeof globalThis.WebSocket;
     if (typeof window !== "undefined" && window.WebSocket) {
         WebSocket = window.WebSocket;
     } else {
         WebSocket = require("ws");
     }
     const ws = new WebSocket(config?.baseUrl ?? "");
-    return async ({ path, args, next }) => {
-        await new Promise<void>((resolve, reject) => {
+
+    let nextId = 1;
+    const pending = new Map<number, { resolve: Function; reject: Function }>();
+    const subscriptions = new Map<number, Function>();
+
+    ws.addEventListener("message", (event: any) => {
+        const response = JSON.parse(event.data);
+        const request = pending.get(response.id);
+        const subscription = subscriptions.get(response.id);
+        if (request) {
+            if (response.body.status >= 200 && response.body.status < 300) {
+                request.resolve(response.body.data);
+            } else {
+                request.reject(response);
+            }
+            pending.delete(response.id);
+        }
+        if (subscription) {
+            subscription(response.body.data);
+        }
+    });
+
+    const waitForWebSocketReady = (ws: WebSocket) => {
+        return new Promise<void>((resolve, reject) => {
             if (ws.readyState === WebSocket.OPEN) {
                 resolve();
             } else {
@@ -40,33 +63,70 @@ export const wsLink = (config?: TransportLinkConfiguration): Link => {
                     ws.removeEventListener("open", onOpen);
                     resolve();
                 };
+                const onError = (error: any) => {
+                    ws.removeEventListener("error", onError);
+                    reject(error);
+                };
                 ws.addEventListener("open", onOpen);
+                ws.addEventListener("error", onError);
             }
         });
+    };
+
+    return ({ path, args, method }) => {
+        let input;
+
+        if (method === "POST") {
+            input = args;
+        }
+
+        if (method === "SUBSCRIBE") {
+            input = args.input;
+        }
+        let id = nextId++;
         const message = {
-            path,
-            method: "POST",
-            input: args,
+            id,
+            method,
+            body: {
+                path,
+                input,
+            },
         };
-        return new Promise((resolve, reject) => {
-            const listener = (event: any) => {
-                const response = JSON.parse(event.data);
-                if (response.status >= 200 && response.status < 300) {
-                    resolve(response.data);
-                } else {
-                    reject(response);
-                }
-                ws.removeEventListener("message", listener);
+
+        if (method === "POST") {
+            return waitForWebSocketReady(ws).then(() => {
+                return new Promise((resolve, reject) => {
+                    pending.set(id, { resolve, reject });
+                    ws.send(JSON.stringify(message));
+                });
+            });
+        }
+
+        if (method === "SUBSCRIBE") {
+            waitForWebSocketReady(ws).then(() => {
+                subscriptions.set(id, args.onMessage);
+                ws.send(JSON.stringify(message));
+            });
+            return () => {
+                waitForWebSocketReady(ws).then(() => {
+                    const message = {
+                        id,
+                        method: "UNSUBSCRIBE",
+                        body: {
+                            path,
+                        },
+                    };
+                    ws.send(JSON.stringify(message));
+                    subscriptions.delete(id);
+                });
             };
-            ws.addEventListener("message", listener);
-            ws.send(JSON.stringify(message));
-        });
+        }
     };
 };
 
 export const loggerLink = (): Link => {
     let group = 0;
-    return async ({ path, args, next }) => {
+    return ({ path, args, method, next }) => {
         group++;
         const current = group;
         const now = new Date();
@@ -82,36 +142,54 @@ export const loggerLink = (): Link => {
             `%c#${current} %c%s %c%s %c(%s)`,
             styles.group,
             styles.header,
-            "Outgoing",
+            method === "SUBSCRIBE" ? "Subscribing" : "Outgoing",
             styles.path,
             path,
             styles.pending,
             "pending",
         );
+        const { onMessage, ...input } = Object.assign({ onMessage: undefined }, args);
         console.log({
-            input: args,
+            input,
         });
         console.groupEnd();
 
-        const response = await next();
-
-        const elapsed = new Date().getTime() - now.getTime();
-
-        console.groupCollapsed(
-            `%c#${current} %c%s %c%s %c(%dms)`,
-            styles.group,
-            styles.header,
-            "Incoming",
-            styles.path,
-            path,
-            styles.complete,
-            elapsed,
-        );
-        console.log({
-            response,
-        });
-        console.groupEnd();
-
-        return response;
+        if (method === "SUBSCRIBE") {
+            const unsubscribe = next() as () => void;
+            return () => {
+                const elapsed = new Date().getTime() - now.getTime();
+                console.groupCollapsed(
+                    `%c#${current} %c%s %c%s %c(%dms)`,
+                    styles.group,
+                    styles.header,
+                    "Unsubscribing",
+                    styles.path,
+                    path,
+                    styles.complete,
+                    elapsed,
+                );
+                console.groupEnd();
+                unsubscribe();
+            };
+        } else {
+            return Promise.resolve(next()).then((response) => {
+                const elapsed = new Date().getTime() - now.getTime();
+                console.groupCollapsed(
+                    `%c#${current} %c%s %c%s %c(%dms)`,
+                    styles.group,
+                    styles.header,
+                    "Outgoing",
+                    styles.path,
+                    path,
+                    styles.complete,
+                    elapsed,
+                );
+                console.log({
+                    response,
+                });
+                console.groupEnd();
+                return response;
+            });
+        }
     };
 };
