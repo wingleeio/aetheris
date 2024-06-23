@@ -1,8 +1,10 @@
+import { Link } from "./links";
+
 export type CreateClientConfiguration = {
-    baseUrl: string;
+    links: Link[];
 };
 
-export const createClient = <Router extends object>(config?: CreateClientConfiguration): Router => {
+export const createClient = <Router extends object>(config: CreateClientConfiguration): Router => {
     const buildClient = <T>(props: string[]): T => {
         const fn = function () {
             return props;
@@ -15,17 +17,37 @@ export const createClient = <Router extends object>(config?: CreateClientConfigu
                 }
                 return buildClient([...props, prop]);
             },
-            apply: async (target, thisArg, args) => {
+            apply: (target, thisArg, args) => {
                 const path: string[] = target();
-                return fetch((config ? config.baseUrl ?? "" : "") + path.join("/"), {
-                    method: "POST",
-                    body: JSON.stringify(args[0]),
-                    headers: { "Content-Type": "application/json" },
-                    cache: "no-cache",
-                    credentials: "include",
-                })
-                    .then((res) => res.json())
-                    .catch((err) => err);
+
+                let method = "POST";
+
+                if (path[path.length - 1] === "subscribe") {
+                    path.pop();
+                    method = "SUBSCRIBE";
+                }
+
+                let index = -1;
+                const executeLink = (i: number): any => {
+                    if (i <= index) throw new Error("next() called multiple times");
+                    index = i;
+                    const link = config.links[i];
+                    if (link) {
+                        const result = link({
+                            path: "/" + path.join("/"),
+                            args: args[0],
+                            method,
+                            next: () => executeLink(i + 1),
+                        });
+                        if (result instanceof Promise) {
+                            return result;
+                        }
+                        return result;
+                    }
+                    return Promise.resolve(null);
+                };
+
+                return executeLink(0);
             },
         });
     };

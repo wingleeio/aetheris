@@ -4,15 +4,15 @@ import { createRouterMap, getMatch } from "../core";
 import { HttpCookieManager } from "./cookies/http-cookie-manager";
 
 export const createHTTPHandler = <Router extends object>({
-    router,
+    app,
     createContext = async () => ({}),
     prefix,
 }: {
-    router: Router;
+    app: Router;
     createContext?: (req: IncomingMessage, res: ServerResponse) => Promise<any> | any;
     prefix?: string;
 }) => {
-    const map = createRouterMap(router);
+    const map = createRouterMap(app);
 
     return async (req: IncomingMessage, res: ServerResponse) => {
         const url = req.url!;

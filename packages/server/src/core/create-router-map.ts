@@ -5,9 +5,19 @@ export const createRouterMap = <Router extends object>(router: Router) => {
 
     const buildMap = (router: Router, path = "") => {
         for (const key in router) {
-            const fullPath = `${path}/${key}`;
+            let fullPath = `${path}/${key}`;
             const value = router[key];
+
             if (typeof value === "function") {
+                const keys: string[] = [];
+                const regexPath = fullPath.replace(/([^/]+):/g, (match, key) => {
+                    keys.push(key);
+                    return "([^/]+)";
+                });
+
+                map[fullPath] = { regex: new RegExp(`^${regexPath}$`), handler: value, keys };
+                // @ts-ignore
+            } else if ("subscribe" in value) {
                 const keys: string[] = [];
                 const regexPath = fullPath.replace(/([^/]+):/g, (match, key) => {
                     keys.push(key);
