@@ -1,5 +1,7 @@
 {
     "context": "Context",
     "validation": "Validation",
-    "middleware": "Middleware"
+    "middleware": "Middleware",
+    "subscriptions": "Subscriptions",
+    "client": "Client"
 }

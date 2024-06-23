@@ -48,7 +48,8 @@ export const aether = createAetheris();
 ```
 
 This function returns a class that gives us a few utilities. These will be used to define your API. Let's 
-begin with creating our base router.
+begin with creating our appication router. The `router` function is used to create a new object that
+defines the entrypoint of our application.
 
 ```ts filename="src/server/index.ts" {5-7} copy
 import { createAetheris, router } from "@aetheris/server";
@@ -107,17 +108,16 @@ the `createClient` function from the `@aetheris/client` package. This function t
 We can import the `Router` type we exported earlier to use as the generic type. For this example, we will hardcode the base URL, but you
 will likely need some additional logic to determine the base URL based on the environment.
 
-<Callout type="warning" emoji="⚠️">
-    Currently `createClient` does not support other transports and only uses fetch. This is a naive implementation and will be improved in the future.
-</Callout>
-
-```ts filename="src/lib/api.ts" {0-2, 4-7} copy
+```ts filename="src/lib/api.ts" {0-2, 4-11} copy
 import type { App } from "@/server";
-import { createClient } from "@aetheris/client";
+import { createClient, httpLink } from "@aetheris/client";
 
 export const api = createClient<App>({
-    // You will need to change this URL in your project.
-    baseUrl: "http://localhost:3000/api/",
+    links:[
+        httpLink({
+            baseUrl: "http://localhost:3000/api",
+        }),
+    ],
 });
 ```
 

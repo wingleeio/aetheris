@@ -1,0 +1,109 @@
+import { Callout } from "nextra/components";
+
+# Subscriptions
+
+Aetheris supports creating fully end to end typesafe subscription endpoints.
+
+<Callout type="info" emoji="ℹ️">
+    Subscriptions are currently only supported with the WebSocket transport. To learn more about creating a WebSocket client, see the [client guide](/concepts/client).
+</Callout>
+
+## Creating a subscription endpoint
+
+We can expand on the example from our [quick start guide](/guide/getting-started) to create a new subscription endpoint. Subscriptions
+can be made by calling `aether.subscription` and providing a `resolve` function that emits data to the client. The `emit` function is only
+added to to context for subscription resolvers. The return value of the `resolve` function is a cleanup function that is called when the
+user unsubscribes or disconnects.
+
+```ts filename="src/server/index.ts" {11-21} copy
+import { createAetheris, router } from "@aetheris/server";
+
+const aether = createAetheris();
+
+export const app = router({
+    helloWorld: aether.handler({
+        resolve: async () => {
+            return "Hello, World!";
+        },
+    }),
+    counter: aether.subscription({
+        resolve: async ({ emit }) => {
+            let count = 1;
+            const interval = setInterval(() => {
+                emit(count++);
+            }, 1000);
+            return () => {
+              clearInterval(interval);
+            }
+        },
+    }),
+});
+
+export type App = typeof app;
+```
+
+## Subscribing to a subscription endpoint
+
+Assuming you've created a client with the websocket transport as explained in the [client guide](/concepts/client), you can subscribe to
+the `counter` subscription by calling the `subscribe` function on the client.
+
+```ts filename="src/index.ts" copy
+import { api } from "@/lib/api";
+
+api.counter.subscribe({
+  onMessage: (message) => {
+    console.log(message);
+  },
+})
+```
+
+Subscribing returns an `unsubscribe` method that we can call to stop listening to the subscription.
+
+```ts filename="src/index.ts" copy
+const unsubscribe = api.counter.subscribe({
+  onMessage: (message) => {
+    console.log(message);
+  },
+})
+
+// Stop listening to the subscription
+unsubscribe();
+```
+
+## Validating subscription inputs and outputs
+
+Like our normal handlers, subscription inputs and outputs can be validated the same we validate our handlers.
+By default, the emitted value from a subscription is `any`, but you can provide a schema to validate the emitted value as well
+as the input object.
+
+
+```ts filename="src/server/index.ts" {12-15} copy
+import { createAetheris, router } from "@aetheris/server";
+
+const aether = createAetheris();
+
+export const app = router({
+    helloWorld: aether.handler({
+        resolve: async () => {
+            return "Hello, World!";
+        },
+    }),
+    counter: aether.subscription({
+        input: z.object({
+            interval: z.number(),
+        }),
+        output: z.number(),
+        resolve: async ({ emit, input }) => {
+            let count = 1;
+            const interval = setInterval(() => {
+                emit(count++);
+            }, input.interval);
+            return () => {
+              clearInterval(interval);
+            }
+        },
+    }),
+});
+
+export type App = typeof app;
+```
