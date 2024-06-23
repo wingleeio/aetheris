@@ -105,7 +105,7 @@ export const POST = handler;
 
 After creating this file, we still need a method to call the API. Create a new file in a directory like `src/lib/api.ts` and import
 the `createClient` function from the `@aetheris/client` package. This function takes a generic type that represents the router object.
-We can import the `Router` type we exported earlier to use as the generic type. For this example, we will hardcode the base URL, but you
+We can import the `App` type we exported earlier to use as the generic type. For this example, we will hardcode the base URL, but you
 will likely need some additional logic to determine the base URL based on the environment.
 
 ```ts filename="src/lib/api.ts" {0-2, 4-11} copy

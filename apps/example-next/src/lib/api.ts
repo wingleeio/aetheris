@@ -6,7 +6,7 @@ export const api = createClient<App>({
     links: [
         loggerLink(),
         httpLink({
-            baseUrl: "http://localhost:3000/api/",
+            baseUrl: "http://localhost:3000/api",
         }),
     ],
 });

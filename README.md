@@ -28,20 +28,20 @@ In this file, import `createAetheris` to create a new Aetheris server.
 // src/server/index.ts
 import { createAetheris } from "@aetheris/server";
 
-export const a = createAetheris();
+export const aether = createAetheris();
 ```
 
-This function returns an object containing two properties, `router` and `procedure`. These will be used to define your API. Let's begin with creating our base router.
+This function returns a class containing utilities to assist in building your application. These will be used to define your API. Let's begin with creating our base router.
 
 ```typescript
 // src/server/index.ts
-import { createAetheris } from "@aetheris/server";
+import { createAetheris, router } from "@aetheris/server";
 
-const a = createAetheris();
+const aether = createAetheris();
 
-export const router = a.router({});
+export const app = router({});
 
-export type Router = typeof router;
+export type App = typeof app;
 ```
 
 We also export the inferred type of the router so that we can import it in the future to create our API client.
@@ -50,19 +50,19 @@ Next, we can create our first procedure. For now, we'll create a basic hello wor
 
 ```typescript
 // src/server/index.ts
-import { createAetheris } from "@aetheris/server";
+import { createAetheris, router } from "@aetheris/server";
 
-const a = createAetheris();
+const aether = createAetheris();
 
-export const router = a.router({
-    helloWorld: a.procedure.handler({
+export const app = router({
+    helloWorld: aether.handler({
         resolve: async () => {
             return "Hello, World!";
         },
     }),
 });
 
-export type Router = typeof router;
+export type App = typeof app;
 ```
 
 ### Creating a Route Handler
@@ -77,10 +77,10 @@ The `createNextHandler` function will create a new Next.js route handler that yo
 ```typescript
 // src/app/api/[[...slug]]/route.ts
 import { createNextHandler } from "@aetheris/server/adapters/next";
-import { router } from "@/server";
+import { app } from "@/server";
 
 const handler = createNextHandler({
-    router,
+    app,
     // We have to set a prefix to let Aetheris know where the route is located.
     prefix: "/api",
 });
@@ -96,14 +96,14 @@ Create a new file in a directory like `src/lib/api.ts`.
 
 Import the `createClient` function from the `@aetheris/client` package.
 
-This function takes a generic type that represents the router object. We can import the `Router` type we exported earlier to use as the generic type. For this example, we will hardcode the base URL, but you will likely need some additional logic to determine the base URL based on the environment.
+This function takes a generic type that represents the router object. We can import the `App` type we exported earlier to use as the generic type. For this example, we will hardcode the base URL, but you will likely need some additional logic to determine the base URL based on the environment.
 
 ```typescript
 // src/lib/api.ts
-import type { Router } from "@/server";
+import type { App } from "@/server";
 import { createClient } from "@aetheris/client";
 
-export const api = createClient<Router>({
+export const api = createClient<App>({
     // You will need to change this URL in your project.
     baseUrl: "http://localhost:3000/api/",
 });
