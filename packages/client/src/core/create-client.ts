@@ -1,4 +1,4 @@
-import { Link } from "./links";
+import { Link, LinkContext } from "./links";
 
 export type CreateClientConfiguration = {
     links: Link[];
@@ -28,16 +28,14 @@ export const createClient = <Router extends object>(config: CreateClientConfigur
                 }
 
                 let index = -1;
-                const executeLink = (i: number): any => {
+                const executeLink = (i: number, context: Omit<LinkContext, "next">): any => {
                     if (i <= index) throw new Error("next() called multiple times");
                     index = i;
                     const link = config.links[i];
                     if (link) {
                         const result = link({
-                            path: "/" + path.join("/"),
-                            args: args[0],
-                            method,
-                            next: () => executeLink(i + 1),
+                            ...context,
+                            next: (context) => executeLink(i + 1, context),
                         });
                         if (result instanceof Promise) {
                             return result;
@@ -47,7 +45,11 @@ export const createClient = <Router extends object>(config: CreateClientConfigur
                     return Promise.resolve(null);
                 };
 
-                return executeLink(0);
+                return executeLink(0, {
+                    path: "/" + path.join("/"),
+                    args: args[0],
+                    method,
+                });
             },
         });
     };

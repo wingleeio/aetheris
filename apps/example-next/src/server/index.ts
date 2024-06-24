@@ -17,6 +17,19 @@ export const app = router({
             };
         },
     }),
+    counter: aether.subscription({
+        input: z.number(),
+        output: z.string(),
+        resolve: async ({ emit, input }) => {
+            let count = 1;
+            const interval = setInterval(() => {
+                emit(`Sent ${count++} messages!`);
+            }, input);
+            return () => {
+                clearInterval(interval);
+            };
+        },
+    }),
 });
 
 export type App = typeof app;

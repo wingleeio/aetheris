@@ -42,6 +42,7 @@ export const app = router({
                 emit(`Sent ${count++} messages!`);
             }, input);
             return () => {
+                console.log("CLEARED");
                 clearInterval(interval);
             };
         },
@@ -79,16 +80,16 @@ server.listen(3002, async () => {
         ],
     });
 
-    const unsubscribe = client.counter.subscribe({
-        input: 1000,
-        onMessage: (message) => {},
-    });
+    // const unsubscribe = client.counter.subscribe({
+    //     input: 1000,
+    //     onMessage: (message) => {},
+    // });
 
-    setTimeout(() => {
-        unsubscribe();
-    }, 5000);
+    // setTimeout(() => {
+    //     unsubscribe();
+    // }, 5000);
 
-    await client.helloWorld({
-        name: "John",
-    });
+    // await client.helloWorld({
+    //     name: "John",
+    // });
 });

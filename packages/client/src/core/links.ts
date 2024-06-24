@@ -2,7 +2,7 @@ export type LinkContext = {
     path: string;
     args: any;
     method: string;
-    next: () => Promise<any> | any;
+    next: (context: Omit<LinkContext, "next">) => Promise<any> | any;
 };
 export type Link = (context: LinkContext) => Promise<any> | any;
 
@@ -58,7 +58,7 @@ export const wsLink = (config?: WebsocketLinkConfiguration): Link => {
     let nextId = 1;
     const pending = new Map<number, { resolve: Function; reject: Function }>();
     const subscriptions = new Map<
-        number,
+        string,
         {
             message: any;
             onMessage: Function;
@@ -191,8 +191,9 @@ export const wsLink = (config?: WebsocketLinkConfiguration): Link => {
         }
 
         if (method === "SUBSCRIBE") {
+            const key = path + JSON.stringify(args.input);
             waitForWebSocketReady().then(() => {
-                subscriptions.set(id, {
+                subscriptions.set(key, {
                     message,
                     onMessage: args.onMessage,
                 });
@@ -204,13 +205,11 @@ export const wsLink = (config?: WebsocketLinkConfiguration): Link => {
                     const unsubscribeMessage = {
                         id,
                         method: "UNSUBSCRIBE",
-                        body: {
-                            path,
-                        },
+                        body: message.body,
                     };
                     messageQueue.push(unsubscribeMessage);
                     flushMessageQueue();
-                    subscriptions.delete(id);
+                    subscriptions.delete(key);
                 });
             };
         }
@@ -239,7 +238,7 @@ export const loggerLink = (): Link => {
             styles.path,
             path,
             styles.pending,
-            "pending",
+            "pending"
         );
         const { onMessage, ...input } = Object.assign({ onMessage: undefined }, args);
         console.log({
@@ -247,26 +246,29 @@ export const loggerLink = (): Link => {
         });
         console.groupEnd();
 
-        if (args.onMessage) {
-            args.onMessage = (message: any) => {
-                console.groupCollapsed(
-                    `%c#${current} %c%s %c%s %c(%s)`,
-                    styles.group,
-                    styles.header,
-                    "Received Message",
-                    styles.path,
-                    path,
-                    styles.complete,
-                    "listening",
-                );
-                console.log(message);
-                console.groupEnd();
-                onMessage(message);
-            };
-        }
-
         if (method === "SUBSCRIBE") {
-            const unsubscribe = next() as () => void;
+            const unsubscribe = next({
+                path,
+                args: {
+                    ...args,
+                    onMessage: (message: any) => {
+                        console.groupCollapsed(
+                            `%c#${current} %c%s %c%s %c(%s)`,
+                            styles.group,
+                            styles.header,
+                            "Received Message",
+                            styles.path,
+                            path,
+                            styles.complete,
+                            "listening"
+                        );
+                        console.log(message);
+                        console.groupEnd();
+                        args.onMessage(message);
+                    },
+                },
+                method,
+            }) as () => void;
             return () => {
                 const elapsed = new Date().getTime() - now.getTime();
                 console.groupCollapsed(
@@ -277,23 +279,29 @@ export const loggerLink = (): Link => {
                     styles.path,
                     path,
                     styles.complete,
-                    elapsed,
+                    elapsed
                 );
                 console.groupEnd();
                 unsubscribe();
             };
         } else {
-            return Promise.resolve(next()).then((response) => {
+            return Promise.resolve(
+                next({
+                    path,
+                    args,
+                    method,
+                })
+            ).then((response) => {
                 const elapsed = new Date().getTime() - now.getTime();
                 console.groupCollapsed(
                     `%c#${current} %c%s %c%s %c(%dms)`,
                     styles.group,
                     styles.header,
-                    "Outgoing",
+                    "Incoming",
                     styles.path,
                     path,
                     styles.complete,
-                    elapsed,
+                    elapsed
                 );
                 console.log({
                     response,
