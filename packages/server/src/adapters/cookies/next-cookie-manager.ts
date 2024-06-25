@@ -34,7 +34,16 @@ export class NextCookieManager implements CookieManager {
         return cookies;
     }
 
-    set(name: string, value: string, options: CookieOptions = {}): void {
+    set(name: string, value: string, _options: CookieOptions = {}): void {
+        const options: CookieOptions = Object.assign(
+            {
+                path: "/",
+                httpOnly: true,
+                secure: true,
+                sameSite: "Lax",
+            },
+            _options
+        );
         this.cookies.set(name, { value, options, updated: true });
     }
 
