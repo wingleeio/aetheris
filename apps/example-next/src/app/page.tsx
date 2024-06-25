@@ -10,7 +10,7 @@ export default async function Home() {
     return (
         <main className="p-20">
             <div className="p-4">{response.message}</div>
-            <ClientComponent count={1} />
+            <ClientComponent />
         </main>
     );
 }

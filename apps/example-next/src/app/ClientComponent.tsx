@@ -4,7 +4,7 @@ import React from "react";
 
 import { client, useAetherisContext } from "@/lib/client";
 
-export const ClientComponent: React.FC<{ count: number }> = ({ count }) => {
+export const ClientComponent: React.FC = () => {
     const { queryClient } = useAetherisContext();
     const { data, queryKey } = client.helloWorld.useQuery({
         input: {
@@ -27,7 +27,7 @@ export const ClientComponent: React.FC<{ count: number }> = ({ count }) => {
                     await mutateAsync(1);
                 }}
             >
-                Click Me
+                Add Count
             </button>
         </div>
     );
