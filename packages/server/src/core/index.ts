@@ -8,3 +8,4 @@ export * from "./handler";
 export * from "./middleware";
 export * from "./procedure-response";
 export * from "./router";
+export * from "./cors-options";

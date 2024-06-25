@@ -1,19 +1,34 @@
-import { createRouterMap, getMatch } from "../core";
+import { CORSOptions, createRouterMap, getMatch } from "../core";
 
-import { NextRequest } from "next/server";
 import { NextCookieManager } from "./cookies/next-cookie-manager";
+import { NextRequest } from "next/server";
 
 export const createNextHandler = <Router extends object>({
     app,
     createContext = async () => ({}),
     prefix,
+    cors = {},
 }: {
     app: Router;
     createContext?: (req: NextRequest) => Promise<any> | any;
     prefix?: string;
+    cors?: CORSOptions;
 }) => {
     const map = createRouterMap(app);
     return async (req: NextRequest) => {
+        const headers = new Headers();
+
+        cors.origin && headers.append("Access-Control-Allow-Origin", cors.origin);
+        cors.methods && headers.append("Access-Control-Allow-Methods", cors.methods);
+        cors.allowedHeaders && headers.append("Access-Control-Allow-Headers", cors.allowedHeaders);
+        cors.exposedHeaders && headers.append("Access-Control-Expose-Headers", cors.exposedHeaders);
+        cors.credentials && headers.append("Access-Control-Allow-Credentials", "true");
+        cors.maxAge && headers.append("Access-Control-Max-Age", cors.maxAge.toString());
+
+        if (req.method === "OPTIONS") {
+            return new Response(null, { status: 204 });
+        }
+
         const url = new URL(req.url!);
         const path = prefix ? url.pathname.replace(prefix, "") : url.pathname;
 
@@ -31,7 +46,6 @@ export const createNextHandler = <Router extends object>({
             const body = await req.json().catch(() => void 0);
 
             const response = await handler(body, context);
-            const headers = new Headers();
             for (const cookie of cookies.getSetCookieHeader()) {
                 headers.append("Set-Cookie", cookie);
             }
