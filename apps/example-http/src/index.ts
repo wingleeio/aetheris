@@ -42,7 +42,6 @@ export const app = router({
                 emit(`Sent ${count++} messages!`);
             }, input);
             return () => {
-                console.log("CLEARED");
                 clearInterval(interval);
             };
         },

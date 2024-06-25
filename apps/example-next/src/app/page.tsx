@@ -5,12 +5,12 @@ import { api } from "@/lib/api";
 
 export default async function Home() {
     const response = await api.helloWorld({
-        name: "Example",
+        name: "Server Component",
     });
     return (
-        <main className="p-24">
-            {response.message}
-            <ClientComponent />
+        <main className="p-20">
+            <div className="p-4">{response.message}</div>
+            <ClientComponent count={1} />
         </main>
     );
 }

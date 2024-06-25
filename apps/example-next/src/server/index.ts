@@ -11,23 +11,21 @@ export const app = router({
         input: z.object({
             name: z.string(),
         }),
-        resolve: async ({ input }) => {
+        resolve: async ({ input, cookies }) => {
+            const count = cookies.get("count") || 0;
             return {
-                message: `Hello from Aetheris, ${input.name}!`,
+                message: `Hello from Aetheris, ${input.name}! The count is ${count}.`,
             };
         },
     }),
-    counter: aether.subscription({
+    addCount: aether.handler({
         input: z.number(),
-        output: z.string(),
-        resolve: async ({ emit, input }) => {
-            let count = 1;
-            const interval = setInterval(() => {
-                emit(`Sent ${count++} messages!`);
-            }, input);
-            return () => {
-                clearInterval(interval);
-            };
+        resolve: async ({ input, cookies }) => {
+            const count = Number(cookies.get("count") || 0);
+            cookies.set("count", (count + input).toString(), {
+                httpOnly: true,
+                path: "/",
+            });
         },
     }),
 });

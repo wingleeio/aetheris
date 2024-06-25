@@ -25,7 +25,7 @@ type UseSubscription<IO extends { input: any; message: any }> = (
 
 type UseQuery<IO extends { input: any; response: any }> = (
     options: Omit<UseQueryOptions, "queryKey"> & OptionalInput<IO["input"]>
-) => UseQueryResult<IO["response"], Error>;
+) => UseQueryResult<IO["response"], Error> & { queryKey: any[] };
 
 type UseMutation<IO extends { input: any; response: any }> = (
     options?: UseMutationOptions
@@ -48,6 +48,10 @@ export const createQueryClient = <Router extends object>(
     client: Router,
     useAetherContext: UseAetherisContext
 ): AetherQueryClient<Router> => {
+    const subscriptions = new Map<
+        string,
+        { unsubscribe: () => void; count: number; callbacks: Set<(data: any) => void> }
+    >();
     const buildQueryHook = <T>(props: string[]): T => {
         const fn = function () {
             return props;
@@ -61,10 +65,11 @@ export const createQueryClient = <Router extends object>(
 
                 if (prop === "useQuery") {
                     const { queryClient } = useAetherContext();
-                    return (options: any = { input: void 0 }) =>
-                        useQuery(
+                    return (options: any = { input: void 0 }) => {
+                        const queryKey = ["aether", props.join("."), JSON.stringify(options.input)];
+                        const query = useQuery(
                             {
-                                queryKey: ["aether", props.join("."), JSON.stringify(options.input)],
+                                queryKey,
                                 queryFn: async () => {
                                     const method = props.reduce((acc, key) => (acc as any)[key], client) as (
                                         data: any
@@ -75,6 +80,11 @@ export const createQueryClient = <Router extends object>(
                             },
                             queryClient
                         );
+                        return {
+                            ...query,
+                            queryKey,
+                        };
+                    };
                 }
 
                 if (prop === "useMutation") {
@@ -102,12 +112,47 @@ export const createQueryClient = <Router extends object>(
                             if (typeof window === "undefined") {
                                 return;
                             }
-                            const method = props.reduce((acc, key) => (acc as any)[key], client) as {
-                                subscribe: (data: any) => any;
+                            const key = props.join(".") + JSON.stringify(options.input);
+
+                            const handleMessage = (data: any) => {
+                                const subscription = subscriptions.get(key);
+                                if (subscription) {
+                                    subscription.callbacks.forEach((cb) => cb(data));
+                                }
                             };
-                            ref.current = method.subscribe(options);
+
+                            if (subscriptions.has(key)) {
+                                const subscription = subscriptions.get(key)!;
+                                subscription.count++;
+                                subscription.callbacks.add(options.onMessage);
+                            } else {
+                                const method = props.reduce((acc, key) => (acc as any)[key], client) as {
+                                    subscribe: (data: any) => any;
+                                };
+                                const unsubscribe = method.subscribe({
+                                    ...options,
+                                    onMessage: handleMessage,
+                                });
+                                subscriptions.set(key, {
+                                    unsubscribe,
+                                    count: 1,
+                                    callbacks: new Set([options.onMessage]),
+                                });
+                            }
+                            ref.current = () => {
+                                const subscription = subscriptions.get(key);
+                                if (subscription) {
+                                    subscription.count--;
+                                    subscription.callbacks.delete(options.onMessage);
+                                    if (subscription.count === 0) {
+                                        subscription.unsubscribe();
+                                        subscriptions.delete(key);
+                                    }
+                                }
+                            };
+
                             return () => {
-                                ref?.current?.();
+                                ref.current?.();
                             };
                         }, []);
 

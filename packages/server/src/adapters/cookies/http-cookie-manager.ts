@@ -2,10 +2,7 @@ import type { IncomingMessage, ServerResponse } from "http";
 import { CookieManager, CookieOptions } from "../../core";
 
 export class HttpCookieManager implements CookieManager {
-    constructor(
-        private req: IncomingMessage,
-        private res: ServerResponse,
-    ) {}
+    constructor(private req: IncomingMessage, private res: ServerResponse) {}
 
     parse(): Record<string, string> {
         const cookieHeader = this.req.headers.cookie;
@@ -55,6 +52,10 @@ export class HttpCookieManager implements CookieManager {
 
         if (options.httpOnly) {
             cookieString += `; HttpOnly`;
+        }
+
+        if (options.sameSite) {
+            cookieString += `; SameSite=${options.sameSite}`;
         }
 
         const existingSetCookieHeader = this.res.getHeader("Set-Cookie");

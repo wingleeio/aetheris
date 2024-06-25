@@ -1,23 +1,15 @@
 import type { App } from "@/server";
-import { createClient, httpLink, loggerLink, matchLink, wsLink } from "@aetheris/client";
+import { createClient, httpLink, loggerLink } from "@aetheris/client";
 
 export const api = createClient<App>({
     links: [
         loggerLink(),
-        matchLink({
-            match: () => {
-                if (typeof window !== "undefined") {
-                    return "ws";
+        httpLink({
+            baseUrl: "http://localhost:3000/api",
+            headers: async () => {
+                if (typeof window === "undefined") {
+                    return import("next/headers").then(({ headers }) => headers());
                 }
-                return "http";
-            },
-            links: {
-                ws: wsLink({
-                    baseUrl: "ws://localhost:3002",
-                }),
-                http: httpLink({
-                    baseUrl: "http://localhost:3002",
-                }),
             },
         }),
     ],

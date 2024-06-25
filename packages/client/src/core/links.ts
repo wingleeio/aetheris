@@ -39,7 +39,7 @@ export const httpLink =
         return fetch((config ? config.baseUrl ?? "" : "") + path, {
             method: "POST",
             body: JSON.stringify(args),
-            headers: { "Content-Type": "application/json" },
+            headers,
             cache: "no-cache",
             credentials: "include",
         })
@@ -58,7 +58,7 @@ export const wsLink = (config?: WebsocketLinkConfiguration): Link => {
     let nextId = 1;
     const pending = new Map<number, { resolve: Function; reject: Function }>();
     const subscriptions = new Map<
-        string,
+        number,
         {
             message: any;
             onMessage: Function;
@@ -83,6 +83,7 @@ export const wsLink = (config?: WebsocketLinkConfiguration): Link => {
             const response = JSON.parse(event.data);
             const request = pending.get(response.id);
             const subscription = subscriptions.get(response.id);
+
             if (request) {
                 if (response.body.status >= 200 && response.body.status < 300) {
                     request.resolve(response.body.data);
@@ -191,9 +192,8 @@ export const wsLink = (config?: WebsocketLinkConfiguration): Link => {
         }
 
         if (method === "SUBSCRIBE") {
-            const key = path + JSON.stringify(args.input);
             waitForWebSocketReady().then(() => {
-                subscriptions.set(key, {
+                subscriptions.set(id, {
                     message,
                     onMessage: args.onMessage,
                 });
@@ -209,7 +209,7 @@ export const wsLink = (config?: WebsocketLinkConfiguration): Link => {
                     };
                     messageQueue.push(unsubscribeMessage);
                     flushMessageQueue();
-                    subscriptions.delete(key);
+                    subscriptions.delete(id);
                 });
             };
         }
