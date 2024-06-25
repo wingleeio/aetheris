@@ -28,6 +28,23 @@ export const app = router({
             });
         },
     }),
+    posts: aether.handler({
+        input: z.object({
+            cursor: z.number(),
+            take: z.number(),
+        }),
+        resolve: async ({ input }) => {
+            const generateFakePost = (index: number) => ({
+                id: index,
+                title: `Post title ${index}`,
+                content: `This is the content of post ${index}.`,
+                author: `Author ${index}`,
+                date: new Date().toISOString(),
+            });
+
+            return Array.from({ length: input.take }, (_, i) => generateFakePost(input.cursor + i));
+        },
+    }),
 });
 
 export type App = typeof app;

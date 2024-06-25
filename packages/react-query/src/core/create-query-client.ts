@@ -1,11 +1,16 @@
 import {
+    InfiniteData,
+    UseInfiniteQueryOptions,
+    UseInfiniteQueryResult,
     UseMutationOptions,
     UseMutationResult,
     UseQueryOptions,
     UseQueryResult,
+    useInfiniteQuery,
     useMutation,
     useQuery,
 } from "@tanstack/react-query";
+
 import React from "react";
 import { UseAetherisContext } from "./create-aetheris-react";
 
@@ -18,35 +23,56 @@ type OptionalInput<T> = unknown extends T ? {} : T extends void | undefined ? {}
 type UseSubscription<IO extends { input: any; message: any }> = (
     options: {
         onMessage: (message: IO["message"]) => void;
-    } & OptionalInput<IO["input"]>
+    } & OptionalInput<IO["input"]>,
 ) => {
     unsubscribe: () => void;
 };
 
 type UseQuery<IO extends { input: any; response: any }> = (
-    options: Omit<UseQueryOptions, "queryKey"> & OptionalInput<IO["input"]>
+    options: Omit<UseQueryOptions, "queryKey"> & OptionalInput<IO["input"]>,
 ) => UseQueryResult<IO["response"], Error> & { queryKey: any[] };
 
+type UseInfiniteQueryInput<Input> = Omit<Input, "cursor">;
+
+type UseInfiniteQuery<IO extends { input: any; response: any; cursor: any }> = (
+    options: Omit<
+        UseInfiniteQueryOptions<IO["response"], unknown, unknown, unknown, unknown[], IO["cursor"]>,
+        "queryKey" | "queryFn"
+    > &
+        OptionalInput<IO["input"]>,
+) => UseInfiniteQueryResult<InfiniteData<IO["response"]>, Error> & { queryKey: any[] };
+
 type UseMutation<IO extends { input: any; response: any }> = (
-    options?: UseMutationOptions
+    options?: UseMutationOptions,
 ) => UseMutationResult<IO["response"], Error, IO["input"]>;
 
-export type AetherQueryClient<T> = T extends Listener<{ input: infer Input; message: infer Message }>
-    ? {
-          useSubscription: UseSubscription<{ input: Input; message: Message }>;
-      }
-    : {
-          [K in keyof T]: T[K] extends (inputData: infer Input) => Promise<infer R>
-              ? {
-                    useQuery: UseQuery<{ input: Input; response: R }>;
-                    useMutation: UseMutation<{ input: Input; response: R }>;
-                }
-              : AetherQueryClient<T[K]>;
-      };
+export type AetherQueryClient<T> =
+    T extends Listener<{ input: infer Input; message: infer Message }>
+        ? {
+              useSubscription: UseSubscription<{ input: Input; message: Message }>;
+          }
+        : {
+              [K in keyof T]: T[K] extends (inputData: infer Input) => Promise<infer R>
+                  ? Input extends { cursor: infer Cursor }
+                      ? {
+                            useQuery: UseQuery<{ input: Input; response: R }>;
+                            useInfiniteQuery: UseInfiniteQuery<{
+                                input: UseInfiniteQueryInput<Input>;
+                                response: R;
+                                cursor: Cursor;
+                            }>;
+                            useMutation: UseMutation<{ input: Input; response: R }>;
+                        }
+                      : {
+                            useQuery: UseQuery<{ input: Input; response: R }>;
+                            useMutation: UseMutation<{ input: Input; response: R }>;
+                        }
+                  : AetherQueryClient<T[K]>;
+          };
 
 export const createQueryClient = <Router extends object>(
     client: Router,
-    useAetherContext: UseAetherisContext
+    useAetherContext: UseAetherisContext,
 ): AetherQueryClient<Router> => {
     const subscriptions = new Map<
         string,
@@ -72,13 +98,37 @@ export const createQueryClient = <Router extends object>(
                                 queryKey,
                                 queryFn: async () => {
                                     const method = props.reduce((acc, key) => (acc as any)[key], client) as (
-                                        data: any
+                                        data: any,
                                     ) => Promise<any>;
                                     return method(options.input);
                                 },
                                 ...options,
                             },
-                            queryClient
+                            queryClient,
+                        );
+                        return {
+                            ...query,
+                            queryKey,
+                        };
+                    };
+                }
+
+                if (prop === "useInfiniteQuery") {
+                    const { queryClient } = useAetherContext();
+                    return (options: any = { input: void 0 }) => {
+                        const queryKey = ["aether", props.join("."), JSON.stringify(options.input)];
+                        const query = useInfiniteQuery(
+                            {
+                                queryKey,
+                                queryFn: async ({ pageParam }) => {
+                                    const method = props.reduce((acc, key) => (acc as any)[key], client) as (
+                                        data: any,
+                                    ) => Promise<any>;
+                                    return method({ ...options.input, cursor: pageParam });
+                                },
+                                ...options,
+                            },
+                            queryClient,
                         );
                         return {
                             ...query,
@@ -94,13 +144,13 @@ export const createQueryClient = <Router extends object>(
                             {
                                 mutationFn: async (data) => {
                                     const method = props.reduce((acc, key) => (acc as any)[key], client) as (
-                                        data: any
+                                        data: any,
                                     ) => Promise<any>;
                                     return method(data);
                                 },
                                 ...options,
                             },
-                            queryClient
+                            queryClient,
                         );
                 }
 

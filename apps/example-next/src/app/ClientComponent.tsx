@@ -1,8 +1,8 @@
 "use client";
 
-import React from "react";
-
 import { client, useAetherisContext } from "@/lib/client";
+
+import React from "react";
 
 export const ClientComponent: React.FC = () => {
     const { queryClient } = useAetherisContext();
