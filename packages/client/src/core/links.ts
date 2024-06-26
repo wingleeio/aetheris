@@ -216,9 +216,16 @@ export const wsLink = (config?: WebsocketLinkConfiguration): Link => {
     };
 };
 
-export const loggerLink = (): Link => {
+export const loggerLink = ({ enabled } = { enabled: true }): Link => {
     let group = 0;
     return ({ path, args, method, next }) => {
+        if (!enabled) {
+            return next({
+                path,
+                args,
+                method,
+            });
+        }
         group++;
         const current = group;
         const now = new Date();
@@ -238,7 +245,7 @@ export const loggerLink = (): Link => {
             styles.path,
             path,
             styles.pending,
-            "pending"
+            "pending",
         );
         const { onMessage, ...input } = Object.assign({ onMessage: undefined }, args);
         console.log({
@@ -260,7 +267,7 @@ export const loggerLink = (): Link => {
                             styles.path,
                             path,
                             styles.complete,
-                            "listening"
+                            "listening",
                         );
                         console.log(message);
                         console.groupEnd();
@@ -279,7 +286,7 @@ export const loggerLink = (): Link => {
                     styles.path,
                     path,
                     styles.complete,
-                    elapsed
+                    elapsed,
                 );
                 console.groupEnd();
                 unsubscribe();
@@ -290,7 +297,7 @@ export const loggerLink = (): Link => {
                     path,
                     args,
                     method,
-                })
+                }),
             ).then((response) => {
                 const elapsed = new Date().getTime() - now.getTime();
                 console.groupCollapsed(
@@ -301,7 +308,7 @@ export const loggerLink = (): Link => {
                     styles.path,
                     path,
                     styles.complete,
-                    elapsed
+                    elapsed,
                 );
                 console.log({
                     response,

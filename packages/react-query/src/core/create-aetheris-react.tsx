@@ -22,7 +22,7 @@ export const createAetherisReact = <Router extends object>(app: Router) => {
             () => ({
                 queryClient,
             }),
-            [queryClient]
+            [queryClient],
         );
         return <Context.Provider value={context}>{children}</Context.Provider>;
     };

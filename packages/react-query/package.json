@@ -1,6 +1,6 @@
 {
     "name": "@aetheris/react-query",
-    "version": "0.0.1",
+    "version": "0.0.8",
     "license": "MIT",
     "type": "module",
     "main": "./dist/index.js",
@@ -8,22 +8,23 @@
     "types": "./dist/index.d.ts",
     "exports": {
         "./package.json": "./package.json",
-        ".": "./dist/index.js"
+        ".": "./dist/index.js",
+        "./server":  "./dist/server.js"
     },
     "scripts": {
         "dev": "tsup --format cjs,esm --dts --watch",
         "build": "tsup --format cjs,esm --dts"
     },
-    "devDependencies": {
-        "@tanstack/react-query": "^5.45.0"
-    },
     "tsup": {
         "entryPoints": {
-            "index": "src/index.tsx"
+            "index": "src/index.tsx",
+            "server": "src/server/index.ts"
         }
     },
     "dependencies": {
         "react": "^18.3.1",
-        "react-dom": "^18.3.1"
+        "react-dom": "^18.3.1",
+        "@tanstack/react-query": "^5.45.0"
+
     }
 }

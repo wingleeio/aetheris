@@ -46,7 +46,7 @@ type UseMutation<IO extends { input: any; response: any }> = (
     options?: UseMutationOptions,
 ) => UseMutationResult<IO["response"], Error, IO["input"]>;
 
-export type AetherQueryClient<T> =
+export type AetherisQueryClient<T> =
     T extends Listener<{ input: infer Input; message: infer Message }>
         ? {
               useSubscription: UseSubscription<{ input: Input; message: Message }>;
@@ -67,13 +67,13 @@ export type AetherQueryClient<T> =
                             useQuery: UseQuery<{ input: Input; response: R }>;
                             useMutation: UseMutation<{ input: Input; response: R }>;
                         }
-                  : AetherQueryClient<T[K]>;
+                  : AetherisQueryClient<T[K]>;
           };
 
 export const createQueryClient = <Router extends object>(
     client: Router,
     useAetherContext: UseAetherisContext,
-): AetherQueryClient<Router> => {
+): AetherisQueryClient<Router> => {
     const subscriptions = new Map<
         string,
         { unsubscribe: () => void; count: number; callbacks: Set<(data: any) => void> }
@@ -216,5 +216,5 @@ export const createQueryClient = <Router extends object>(
             },
         });
     };
-    return buildQueryHook<AetherQueryClient<Router>>([]);
+    return buildQueryHook<AetherisQueryClient<Router>>([]);
 };

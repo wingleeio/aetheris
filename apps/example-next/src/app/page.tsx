@@ -1,18 +1,36 @@
 export const dynamic = "force-dynamic";
 
+import { api, helpers } from "@/lib/api";
+
 import { ClientComponent } from "@/app/ClientComponent";
+import { HydrationBoundary } from "@tanstack/react-query";
 import { InfiniteQueryComponent } from "@/app/InfiniteQueryComponent";
-import { api } from "@/lib/api";
 
 export default async function Home() {
     const response = await api.helloWorld({
         name: "Server Component",
     });
+
+    await helpers.helloWorld.prefetch({
+        input: {
+            name: "Client Component",
+        },
+    });
+
+    await helpers.posts.prefetchInfinite({
+        input: {
+            take: 10,
+        },
+        initialPageParam: 0,
+    });
+
     return (
-        <main className="p-20">
-            <div className="p-4">{response.message}</div>
-            <ClientComponent />
-            <InfiniteQueryComponent />
-        </main>
+        <HydrationBoundary state={helpers.dehydrate()}>
+            <main className="p-20">
+                <div className="p-4">{response.message}</div>
+                <ClientComponent />
+                <InfiniteQueryComponent />
+            </main>
+        </HydrationBoundary>
     );
 }
