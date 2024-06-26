@@ -1,6 +1,6 @@
 {
     "name": "@aetheris/client",
-    "version": "0.0.9",
+    "version": "0.0.10",
     "license": "MIT",
     "type": "module",
     "main": "./dist/index.js",
@@ -8,7 +8,11 @@
     "types": "./dist/index.d.ts",
     "exports": {
         "./package.json": "./package.json",
-        ".": "./dist/index.js"
+        ".": {
+            "import": "./dist/index.js",
+            "require": "./dist/index.cjs",
+            "types": "./dist/index.d.ts"
+        }
     },
     "scripts": {
         "dev": "tsup src/index.ts --format cjs,esm --dts --watch",

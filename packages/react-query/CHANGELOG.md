@@ -1,5 +1,11 @@
 # @aetheris/react-query
 
+## 0.0.10
+
+### Patch Changes
+
+-   Update exports
+
 ## 0.0.9
 
 ### Patch Changes

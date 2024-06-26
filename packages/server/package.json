@@ -1,6 +1,6 @@
 {
     "name": "@aetheris/server",
-    "version": "0.0.9",
+    "version": "0.0.10",
     "license": "MIT",
     "type": "module",
     "main": "./dist/index.js",
@@ -8,11 +8,31 @@
     "types": "./dist/index.d.ts",
     "exports": {
         "./package.json": "./package.json",
-        ".": "./dist/index.js",
-        "./adapters/http": "./dist/adapters/http.js",
-        "./adapters/next": "./dist/adapters/next.js",
-        "./adapters/ws": "./dist/adapters/ws.js",
-        "./core": "./dist/core/index.js"
+        ".": {
+            "import": "./dist/index.js",
+            "require": "./dist/index.cjs",
+            "types": "./dist/index.d.ts"
+        },
+        "./adapters/http": {
+            "import": "./dist/adapters/http.js",
+            "require": "./dist/adapters/http.cjs",
+            "types": "./dist/adapters/http.d.ts"
+        },
+        "./adapters/next": {
+            "import": "./dist/adapters/next.js",
+            "require": "./dist/adapters/next.cjs",
+            "types": "./dist/adapters/next.d.ts"
+        },
+        "./adapters/ws": {
+            "import": "./dist/adapters/ws.js",
+            "require": "./dist/adapters/ws.cjs",
+            "types": "./dist/adapters/ws.d.ts"
+        },
+        "./core": {
+            "import": "./dist/core/index.js",
+            "require": "./dist/core/index.cjs",
+            "types": "./dist/core/index.d.ts"
+        }
     },
     "scripts": {
         "dev": "tsup --format cjs,esm --dts --watch",
