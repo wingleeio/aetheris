@@ -1,0 +1,174 @@
+import { Tab, Tabs } from "nextra/components";
+
+# React Query
+
+You can integrate Aetheris into your Next application using [React Query](https://tanstack.com/query/). React Query is a powerful library that provides hooks for fetching, caching, and updating data in your application.
+To use it, you will need to install the `@tanstack/react-query` package, as well as the `@aetheris/react-query` package.
+
+## Installation
+
+This guide assumes you have already setup `@aetheris/client` on your frontend. If you haven't, you can reference the documentation on the [client](/concepts/client) and [quick start guide](/guide/getting-started) pages.
+
+<Tabs items={["pnpm", "npm", "yarn"]}>
+    <Tab>
+      ```bash 
+      pnpm add @tanstack/react-query @aetheris/react-query 
+      ```
+    </Tab>
+    <Tab>
+      ```bash 
+      npm i @tanstack/react-query @aetheris/react-query
+      ```
+    </Tab>
+    <Tab>
+      ```bash 
+      yarn add @tanstack/react-query @aetheris/react-query
+      ```
+    </Tab>
+</Tabs>
+
+## Setup
+
+The rest of this guide will walk you through the process of setting up React Query with Aetheris.
+
+### Create the client
+
+Start by creating a file for your client. This file will contain the api client and the React Query client, and our 
+server helpers for React Query.
+
+```ts filename="src/lib/api.ts" copy
+import type { App } from "@/server";
+import { createClient, httpLink } from "@aetheris/client";
+import { createServerHelpers } from "@aetheris/react-query/server";
+
+export const api = createClient<App>({
+    links:[
+        httpLink({
+            baseUrl: "http://localhost:3000/api",
+        }),
+    ],
+});
+
+export const helpers = createServerHelpers(api);
+```
+
+This is the same client we created in the [vanilla](/integrations/vanilla) guide. To make this work with React Query and Next, we
+need to create the client using `createAetherisReact`. Create a new file for this client, and mark it with `"use client"`.
+
+```ts filename="src/lib/api.ts" {5} copy
+"use client";
+import { api } from "@/lib/api";
+import { createAetherisReact } from "@aetheris/react-query";
+
+export const { AetherisProvider, client, useAetherisContext } = createAetherisReact(api);
+```
+
+The `createAetherisReact` function takes the api client and returns a provider, client, and context hook for using the query client in your application.
+
+### Setup the providers
+
+Now we will need to setup the provider for your query client. This is done by wrapping your application in the `AetherisProvider` component. You will also
+need to wrap your application in the `QueryClientProvider` component from React Query.
+
+```tsx filename="src/components/client-provider.tsx" copy
+"use client";
+
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+import { AetherisProvider } from "@/lib/client";
+import { useState } from "react";
+
+export const ClientProvider = ({ children }: { children: React.ReactNode }) => {
+    const [queryClient] = useState(
+        () =>
+            new QueryClient({
+                defaultOptions: {
+                    queries: {
+                        staleTime: 60 * 1000,
+                    },
+                },
+            }),
+    );
+    return (
+        <QueryClientProvider client={queryClient}>
+            <AetherisProvider queryClient={queryClient}>{children}</AetherisProvider>
+        </QueryClientProvider>
+    );
+};
+```
+
+Now in your root layout file, you can wrap your application in the `ClientProvider` component.
+
+```tsx filename="src/app/layout.tsx" {20, 24} copy
+import "./globals.css";
+
+import { ClientProvider } from "@/components/client-provider";
+import { Inter } from "next/font/google";
+import type { Metadata } from "next";
+
+const inter = Inter({ subsets: ["latin"] });
+
+export const metadata: Metadata = {
+    title: "Aetheris Next Showcase",
+    description: "App showcasing Aether's capabilities",
+};
+
+export default function RootLayout({
+    children,
+}: Readonly<{
+    children: React.ReactNode;
+}>) {
+    return (
+        <ClientProvider>
+            <html lang="en">
+                <body className={inter.className}>{children}</body>
+            </html>
+        </ClientProvider>
+    );
+}
+```
+
+### Using the client
+
+Now the client is setup, you can use the `client` object to call your API routes. The client will automatically infer any inputs or outputs from the api endpoints you created.
+
+```tsx filename="src/components/post.tsx" {4} copy
+import { client } from "@/lib/api";
+
+export const Post = () => {
+    const { data, error } = await client.getPost.useQuery({
+        input: { id: 1 },
+    });
+
+    if (error) {
+        return <div>Error: {error.message}</div>;
+    }
+
+    if (!data) {
+        return <div>Loading...</div>;
+    }
+
+    return <div>{post.title}</div>;
+};
+```
+
+You can also prefetch the data in your server components.
+
+```tsx filename="src/app/page.tsx" copy
+import { helpers } from "@/lib/api";
+import { Post } from "@/components/post";
+import { HydrationBoundary } from "@tanstack/react-query";
+
+const Page = async () => {
+    await helpers.getPost.prefetch({
+        input: {
+            id: 1,
+        },
+    });
+    return (
+        <HydrationBoundary state={helpers.dehydrate()}>
+            <Post />
+        </HydrationBoundary>
+    );
+}
+```

@@ -1,0 +1,36 @@
+# Vanilla
+
+The vanilla client is introduced earlier in the [client](/concepts/client) section. 
+
+## Setup
+
+You can setup the vanilla client by using the `createClient` function from the `@aetheris/client` package, with the default
+`httpLink` transport.
+
+```ts filename="src/lib/api.ts" {0-2, 4-11} copy
+import type { App } from "@/server";
+import { createClient, httpLink } from "@aetheris/client";
+
+export const api = createClient<App>({
+    links:[
+        httpLink({
+            baseUrl: "http://localhost:3000/api",
+        }),
+    ],
+});
+```
+
+## Usage
+
+With the client created, you can now import the `api` object and call your API routes. The client will automatically infer any input and
+output types from the api endpoints you created.
+
+```ts filename="src/app/page.tsx" {4} copy
+import { api } from "@/lib/api";
+
+const Page = async() => {
+    const post = await api.getPost({ id: 1 });
+
+    return <div>{data.title}</div>;
+};
+```
