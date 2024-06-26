@@ -3,8 +3,8 @@ export const dynamic = "force-dynamic";
 import { api, helpers } from "@/lib/api";
 
 import { ClientComponent } from "@/app/ClientComponent";
-import { HydrationBoundary } from "@tanstack/react-query";
 import { InfiniteQueryComponent } from "@/app/InfiniteQueryComponent";
+import { HydrationBoundary } from "@tanstack/react-query";
 
 export default async function Home() {
     const response = await api.helloWorld({
@@ -27,7 +27,7 @@ export default async function Home() {
 
     return (
         <HydrationBoundary state={helpers.dehydrate()}>
-            <main className="p-20">
+            <main className="p-4">
                 <div className="p-4">{response.message}</div>
                 <ClientComponent />
                 <InfiniteQueryComponent />
