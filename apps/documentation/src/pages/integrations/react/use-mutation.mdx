@@ -1,0 +1,11 @@
+# Use Mutation
+
+Use the `useMutation` hook for endpoints that cause side effects on the server.
+
+```tsx
+const { mutate, mutateAsync } = client.addPost.useMutation({
+    onSuccess: () => {
+        // Do something on success
+    }
+});
+```

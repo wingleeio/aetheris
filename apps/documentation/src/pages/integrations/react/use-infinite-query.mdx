@@ -1,0 +1,51 @@
+# Use Infinite Query
+
+Use the `useInfiniteQuery` hook for endpoints that cause side effects on the server.
+
+```tsx
+const { data, hasNextPage, fetchNextPage } = client.posts.useInfiniteQuery({
+    input: {
+        take: 10,
+    },
+    getNextPageParam: (lastPage) => {
+        if (lastPage.length > 0) {
+            return lastPage[lastPage.length - 1].id + 1;
+        }
+
+        return 0;
+    },
+    initialPageParam: 0,
+});
+```
+
+The `useInfiniteQuery` is only exposed if your endpoint takes `cursor` as an input.
+
+```ts
+import { createAetheris, router } from "@aetheris/server";
+
+import { z } from "zod";
+
+export const aether = createAetheris();
+
+export const app = router({
+    posts: aether.handler({
+        input: z.object({
+            cursor: z.number(),
+            take: z.number(),
+        }),
+        resolve: async ({ input }) => {
+            const generateFakePost = (index: number) => ({
+                id: index,
+                title: `Post title ${index}`,
+                content: `This is the content of post ${index}.`,
+                author: `Author ${index}`,
+                date: new Date().toISOString(),
+            });
+
+            return Array.from({ length: input.take }, (_, i) => generateFakePost(input.cursor + i));
+        },
+    }),
+});
+
+export type App = typeof app;
+```

@@ -1,0 +1,5 @@
+{
+    "use-query": "useQuery",
+    "use-mutation": "useMutation",
+    "use-infinite-query": "useInfiniteQuery"
+}
