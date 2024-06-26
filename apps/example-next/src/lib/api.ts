@@ -9,7 +9,7 @@ export const api = createClient<App>({
             enabled: typeof window !== "undefined",
         }),
         httpLink({
-            baseUrl: "http://localhost:3000/api",
+            baseUrl: process.env.NEXT_PUBLIC_URL!,
             headers: async () => {
                 if (typeof window === "undefined") {
                     return import("next/headers").then(({ headers }) => headers());
