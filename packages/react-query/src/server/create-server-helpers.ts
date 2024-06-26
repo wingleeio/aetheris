@@ -7,19 +7,26 @@ import {
 } from "@tanstack/react-query";
 
 type Prefetch<Input> = (input: Omit<FetchQueryOptions, "queryKey"> & { input: Input }) => Promise<void>;
-type PrefetchInfinite<Input> = (
-    options: Omit<FetchInfiniteQueryOptions, "queryKey"> & { input: Input },
+type PrefetchInfinite<Input, Cursor> = (
+    options: Omit<FetchInfiniteQueryOptions<unknown, unknown, unknown, any, Cursor>, "queryKey"> & { input: Input },
 ) => Promise<void>;
+type GetQueryKey<Input> = (input: Input) => any[];
 
 export type AetherisServerHelpers<T> = T extends object
     ? {
           [K in keyof T as T[K] extends { subscribe: any } ? never : K]: T[K] extends (
               inputData: infer Input,
           ) => Promise<any>
-              ? {
-                    prefetch: Prefetch<Input>;
-                    prefetchInfinite: PrefetchInfinite<Omit<Input, "cursor">>;
-                }
+              ? Input extends { cursor: infer Cursor }
+                  ? {
+                        prefetch: Prefetch<Input>;
+                        prefetchInfinite: PrefetchInfinite<Omit<Input, "cursor">, Cursor>;
+                        getQueryKey: GetQueryKey<Input>;
+                    }
+                  : {
+                        prefetch: Prefetch<Input>;
+                        getQueryKey: GetQueryKey<Input>;
+                    }
               : AetherisServerHelpers<T[K]>;
       }
     : T;
@@ -43,6 +50,12 @@ export const createServerHelpers = <Router extends object>(
                 if (prop === "dehydrate") {
                     return () => {
                         return dehydrate(queryClient);
+                    };
+                }
+
+                if (prop === "getQueryKey") {
+                    return (input: any) => {
+                        return ["aether", props.join("."), JSON.stringify(input)];
                     };
                 }
 

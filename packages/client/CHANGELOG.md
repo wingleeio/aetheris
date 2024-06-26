@@ -1,5 +1,11 @@
 # @aetheris/client
 
+## 0.0.11
+
+### Patch Changes
+
+-   Add helper for getting query key
+
 ## 0.0.10
 
 ### Patch Changes
