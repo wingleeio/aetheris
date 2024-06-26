@@ -11,20 +11,19 @@ export default async function Home() {
         name: "Server Component",
     });
 
-    await helpers.helloWorld.prefetch({
-        input: {
-            name: "Client Component",
-        },
-    });
-
-    await helpers.posts.prefetchInfinite({
-        input: {
-            take: 10,
-        },
-        initialPageParam: 0,
-    });
-    console.log("HELLO");
-    console.log(helpers.dehydrate());
+    await Promise.all([
+        helpers.helloWorld.prefetch({
+            input: {
+                name: "Client Component",
+            },
+        }),
+        helpers.posts.prefetchInfinite({
+            input: {
+                take: 10,
+            },
+            initialPageParam: 0,
+        }),
+    ]);
 
     return (
         <HydrationBoundary state={helpers.dehydrate()}>
