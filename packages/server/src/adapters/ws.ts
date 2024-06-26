@@ -85,14 +85,17 @@ export const applyWSSHandler = <Router extends object>({
 
                     if (method === "POST") {
                         const response = await handler(input ?? void 0, context);
-
+                        const data = {
+                            data: response.status < 400 ? response.data : null,
+                            error: response.status >= 400 ? response.data : null,
+                        };
                         let output: Message<Outgoing> = {
                             id,
                             method,
                             body: {
                                 status: response.status,
                                 path,
-                                data: response.data ?? null,
+                                data: data ?? null,
                             },
                         };
 
@@ -151,7 +154,7 @@ export const applyWSSHandler = <Router extends object>({
                     JSON.stringify({
                         status: 500,
                         data: "Internal server error",
-                    })
+                    }),
                 );
             }
         });

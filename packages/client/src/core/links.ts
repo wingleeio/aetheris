@@ -44,7 +44,12 @@ export const httpLink =
             credentials: "include",
         })
             .then((res) => res.json())
-            .catch((err) => err);
+            .then((json) => {
+                if (json.error) {
+                    throw json.error;
+                }
+                return json.data;
+            });
     };
 
 export const wsLink = (config?: WebsocketLinkConfiguration): Link => {
@@ -85,10 +90,11 @@ export const wsLink = (config?: WebsocketLinkConfiguration): Link => {
             const subscription = subscriptions.get(response.id);
 
             if (request) {
-                if (response.body.status >= 200 && response.body.status < 300) {
-                    request.resolve(response.body.data);
+                console.log(response);
+                if (!response.body.data.error) {
+                    request.resolve(response.body.data.data);
                 } else {
-                    request.reject(response);
+                    request.reject(response.body.data.error);
                 }
                 pending.delete(response.id);
             }

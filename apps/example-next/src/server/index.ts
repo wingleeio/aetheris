@@ -1,4 +1,4 @@
-import { createAetheris, router } from "@aetheris/server";
+import { AetherisError, createAetheris, router } from "@aetheris/server";
 
 import { z } from "zod";
 

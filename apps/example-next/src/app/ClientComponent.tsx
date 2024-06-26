@@ -16,6 +16,9 @@ export const ClientComponent: React.FC = () => {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey });
         },
+        onError: (error) => {
+            console.log(error);
+        },
     });
 
     return (

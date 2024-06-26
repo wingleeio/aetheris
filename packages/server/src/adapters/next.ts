@@ -49,8 +49,12 @@ export const createNextHandler = <Router extends object>({
             for (const cookie of cookies.getSetCookieHeader()) {
                 headers.append("Set-Cookie", cookie);
             }
+            const data = {
+                data: response.status < 400 ? response.data : null,
+                error: response.status >= 400 ? response.data : null,
+            };
 
-            return Response.json(response.data ?? null, {
+            return Response.json(data ?? null, {
                 status: response.status,
                 headers,
             });

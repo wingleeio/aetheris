@@ -29,6 +29,7 @@ export const app = router({
         }),
         resolve: async ({ input, cookies }) => {
             const count = cookies.get("count") || 0;
+
             return {
                 message: `Hello from Aetheris, ${input.name}! The count is ${count}.`,
             };
@@ -105,7 +106,8 @@ server.listen(3002, async () => {
         unsubscribe();
     }, 5000);
 
-    await client.helloWorld({
+    const test = await client.helloWorld({
         name: "John",
     });
+    console.log(test);
 });
