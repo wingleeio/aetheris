@@ -1,11 +1,11 @@
-import { createClient, loggerLink, wsLink } from "@aetheris/client";
 import { createAetheris, router } from "@aetheris/server";
+import { createClient, loggerLink, wsLink } from "@aetheris/client";
 
-import { createHTTPHandler } from "@aetheris/server/adapters/http";
+import WebSocket from "ws";
 import { applyWSSHandler } from "@aetheris/server/adapters/ws";
+import { createHTTPHandler } from "@aetheris/server/adapters/http";
 import { createServer } from "http";
 import pino from "pino";
-import WebSocket from "ws";
 import { z } from "zod";
 
 const logger = pino({
@@ -27,10 +27,21 @@ export const app = router({
         input: z.object({
             name: z.string(),
         }),
-        resolve: async ({ input }) => {
+        resolve: async ({ input, cookies }) => {
+            const count = cookies.get("count") || 0;
             return {
-                message: `Hello from Aetheris, ${input.name}!`,
+                message: `Hello from Aetheris, ${input.name}! The count is ${count}.`,
             };
+        },
+    }),
+    addCount: withLogger.handler({
+        input: z.number(),
+        resolve: async ({ input, cookies }) => {
+            const count = Number(cookies.get("count") || 0);
+            cookies.set("count", (count + input).toString(), {
+                httpOnly: true,
+                path: "/",
+            });
         },
     }),
     counter: withLogger.subscription({
@@ -51,6 +62,12 @@ export const app = router({
 const handler = createHTTPHandler({
     app,
     createContext,
+    cors: {
+        origin: "http://localhost:3000",
+        methods: "GET, POST, PUT, DELETE, OPTIONS",
+        allowedHeaders: "Content-Type, Authorization",
+        credentials: true,
+    },
 });
 
 const server = createServer(handler);

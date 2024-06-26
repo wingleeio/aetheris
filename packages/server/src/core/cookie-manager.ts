@@ -5,6 +5,7 @@ export type CookieOptions = {
     path?: string;
     secure?: boolean;
     httpOnly?: boolean;
+    sameSite?: "Strict" | "Lax" | "None";
 };
 
 export interface CookieManager {

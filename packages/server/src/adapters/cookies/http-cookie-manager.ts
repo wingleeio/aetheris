@@ -2,10 +2,7 @@ import type { IncomingMessage, ServerResponse } from "http";
 import { CookieManager, CookieOptions } from "../../core";
 
 export class HttpCookieManager implements CookieManager {
-    constructor(
-        private req: IncomingMessage,
-        private res: ServerResponse,
-    ) {}
+    constructor(private req: IncomingMessage, private res: ServerResponse) {}
 
     parse(): Record<string, string> {
         const cookieHeader = this.req.headers.cookie;
@@ -28,7 +25,16 @@ export class HttpCookieManager implements CookieManager {
         return this.parse();
     }
 
-    set(name: string, value: string, options: CookieOptions = {}): void {
+    set(name: string, value: string, _options: CookieOptions = {}): void {
+        const options: CookieOptions = Object.assign(
+            {
+                path: "/",
+                httpOnly: true,
+                secure: true,
+                sameSite: "Lax",
+            },
+            _options
+        );
         let cookieString = `${name}=${encodeURIComponent(value)}`;
 
         if (options.expires) {
@@ -55,6 +61,10 @@ export class HttpCookieManager implements CookieManager {
 
         if (options.httpOnly) {
             cookieString += `; HttpOnly`;
+        }
+
+        if (options.sameSite) {
+            cookieString += `; SameSite=${options.sameSite}`;
         }
 
         const existingSetCookieHeader = this.res.getHeader("Set-Cookie");

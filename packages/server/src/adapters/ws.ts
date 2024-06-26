@@ -63,7 +63,10 @@ export const applyWSSHandler = <Router extends object>({
             });
         }
 
-        const unsubscribers = new Map<number, Function>();
+        const unsubscribers = new Map<
+            number,
+            { resolve: (unsubscribe: Function) => void; promise: Promise<Function> }
+        >();
 
         ws.on("message", async (buffer: Buffer) => {
             try {
@@ -97,24 +100,36 @@ export const applyWSSHandler = <Router extends object>({
                     }
 
                     if (method === "SUBSCRIBE") {
-                        const unsubscriber = await handler.subscribe(input ?? void 0, context, (data: any) => {
-                            let output: Message<Outgoing> = {
-                                id,
-                                method,
-                                body: {
-                                    status: 200,
-                                    path,
-                                    data,
-                                },
-                            };
-                            ws.send(JSON.stringify(output));
+                        const unsubscriberPromise = new Promise<Function>((resolve) => {
+                            const unsubscriber = handler.subscribe(input ?? void 0, context, (data: any) => {
+                                let output: Message<Outgoing> = {
+                                    id,
+                                    method,
+                                    body: {
+                                        status: 200,
+                                        path,
+                                        data,
+                                    },
+                                };
+                                ws.send(JSON.stringify(output));
+                            });
+
+                            resolve(unsubscriber);
                         });
-                        unsubscribers.set(id, unsubscriber);
+
+                        unsubscribers.set(id, { promise: unsubscriberPromise, resolve: () => {} });
+                        unsubscriberPromise.then((unsubscribe) => {
+                            if (unsubscribers.has(id)) {
+                                unsubscribers.get(id)!.resolve(unsubscribe);
+                            }
+                        });
                     }
 
                     if (method === "UNSUBSCRIBE") {
-                        const unsubscriber = unsubscribers.get(id);
-                        if (unsubscriber) {
+                        const subscription = unsubscribers.get(id);
+
+                        if (subscription) {
+                            const unsubscriber = await subscription.promise;
                             unsubscriber();
                             unsubscribers.delete(id);
                         }
@@ -136,16 +151,15 @@ export const applyWSSHandler = <Router extends object>({
                     JSON.stringify({
                         status: 500,
                         data: "Internal server error",
-                    }),
+                    })
                 );
             }
         });
 
         ws.on("close", () => {
-            unsubscribers.forEach((unsubscriber) => {
-                if (typeof unsubscriber === "function") {
-                    unsubscriber();
-                }
+            unsubscribers.forEach(async (subscription) => {
+                const unsubscriber = await subscription.promise;
+                unsubscriber();
             });
         });
     });
