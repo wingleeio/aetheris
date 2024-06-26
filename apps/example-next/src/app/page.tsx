@@ -23,6 +23,8 @@ export default async function Home() {
         },
         initialPageParam: 0,
     });
+    console.log("HELLO");
+    console.log(helpers.dehydrate());
 
     return (
         <HydrationBoundary state={helpers.dehydrate()}>
