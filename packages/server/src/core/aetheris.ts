@@ -25,7 +25,7 @@ export class Aetheris<Context extends AetherisContext> {
     ) {}
 
     public use<NewContext extends object | void>(
-        createContext: (context: Context) => Partial<NewContext> | Promise<Partial<NewContext>>,
+        createContext: (context: Context) => NewContext | Promise<NewContext>,
     ) {
         const newMiddlewares = [...this.middlewares, (context: Context) => createContext(context) ?? {}] as Array<
             (context: Context) => Partial<Context & NewContext> | Promise<Partial<Context & NewContext>>

@@ -1,5 +1,17 @@
 # @aetheris/server
 
+## 0.0.13
+
+### Patch Changes
+
+-   Fix issue with middleware not inferring optional context values
+
+## 0.0.12
+
+### Patch Changes
+
+-   Update cookies to support lower or upper case sameSite
+
 ## 0.0.11
 
 ### Patch Changes

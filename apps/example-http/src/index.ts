@@ -1,11 +1,11 @@
-import { createAetheris, router } from "@aetheris/server";
 import { createClient, loggerLink, wsLink } from "@aetheris/client";
+import { createAetheris, router } from "@aetheris/server";
 
-import WebSocket from "ws";
-import { applyWSSHandler } from "@aetheris/server/adapters/ws";
 import { createHTTPHandler } from "@aetheris/server/adapters/http";
+import { applyWSSHandler } from "@aetheris/server/adapters/ws";
 import { createServer } from "http";
 import pino from "pino";
+import WebSocket from "ws";
 import { z } from "zod";
 
 const logger = pino({

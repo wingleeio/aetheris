@@ -1,6 +1,7 @@
 export * from "./aetheris";
 export * from "./aetheris-error";
 export * from "./cookie-manager";
+export * from "./cors-options";
 export * from "./create-aetheris";
 export * from "./create-router-map";
 export * from "./get-match";
@@ -8,4 +9,4 @@ export * from "./handler";
 export * from "./middleware";
 export * from "./procedure-response";
 export * from "./router";
-export * from "./cors-options";
+export * from "./utils";

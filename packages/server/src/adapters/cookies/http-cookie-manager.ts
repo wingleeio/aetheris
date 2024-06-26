@@ -1,8 +1,11 @@
 import type { IncomingMessage, ServerResponse } from "http";
-import { CookieManager, CookieOptions } from "../../core";
+import { CookieManager, CookieOptions, capitalizeFirstLetter } from "../../core";
 
 export class HttpCookieManager implements CookieManager {
-    constructor(private req: IncomingMessage, private res: ServerResponse) {}
+    constructor(
+        private req: IncomingMessage,
+        private res: ServerResponse,
+    ) {}
 
     parse(): Record<string, string> {
         const cookieHeader = this.req.headers.cookie;
@@ -33,7 +36,7 @@ export class HttpCookieManager implements CookieManager {
                 secure: true,
                 sameSite: "Lax",
             },
-            _options
+            _options,
         );
         let cookieString = `${name}=${encodeURIComponent(value)}`;
 
@@ -64,7 +67,7 @@ export class HttpCookieManager implements CookieManager {
         }
 
         if (options.sameSite) {
-            cookieString += `; SameSite=${options.sameSite}`;
+            cookieString += `; SameSite=${capitalizeFirstLetter(options.sameSite)}`;
         }
 
         const existingSetCookieHeader = this.res.getHeader("Set-Cookie");

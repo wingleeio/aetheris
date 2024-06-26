@@ -1,4 +1,4 @@
-import { CookieManager, CookieOptions } from "../../core";
+import { CookieManager, CookieOptions, capitalizeFirstLetter } from "../../core";
 
 import type { RequestCookies } from "next/dist/compiled/@edge-runtime/cookies";
 
@@ -42,7 +42,10 @@ export class NextCookieManager implements CookieManager {
                 secure: true,
                 sameSite: "Lax",
             },
-            _options
+            {
+                ..._options,
+                sameSite: capitalizeFirstLetter(_options.sameSite || "Lax") as CookieOptions["sameSite"],
+            },
         );
         this.cookies.set(name, { value, options, updated: true });
     }
