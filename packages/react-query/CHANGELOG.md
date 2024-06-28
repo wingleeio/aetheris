@@ -1,5 +1,11 @@
 # @aetheris/react-query
 
+## 0.0.15
+
+### Patch Changes
+
+-   Update prefetch to take no inputs
+
 ## 0.0.14
 
 ### Patch Changes

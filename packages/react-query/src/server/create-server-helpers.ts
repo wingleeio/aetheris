@@ -6,7 +6,9 @@ import {
     dehydrate,
 } from "@tanstack/react-query";
 
-type Prefetch<Input> = (input: Omit<FetchQueryOptions, "queryKey"> & { input: Input }) => Promise<void>;
+type Prefetch<Input> = Input extends void
+    ? (options?: Omit<FetchQueryOptions, "queryKey">) => Promise<void>
+    : (options: Omit<FetchQueryOptions, "queryKey"> & { input: Input }) => Promise<void>;
 type PrefetchInfinite<Input, Cursor> = (
     options: Omit<FetchInfiniteQueryOptions<unknown, unknown, unknown, any, Cursor>, "queryKey"> & { input: Input },
 ) => Promise<void>;
