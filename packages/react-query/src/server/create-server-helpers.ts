@@ -63,7 +63,7 @@ export const createServerHelpers = <Router extends object>(
 
                 if (prop === "prefetch") {
                     return (options: any) => {
-                        const queryKey = ["aether", props.join("."), JSON.stringify(options.input)];
+                        const queryKey = ["aether", props.join("."), JSON.stringify(options?.input)];
 
                         return queryClient.prefetchQuery({
                             ...options,
@@ -72,7 +72,7 @@ export const createServerHelpers = <Router extends object>(
                                 const method = props.reduce((acc, key) => (acc as any)[key], client) as (
                                     data: any,
                                 ) => Promise<any>;
-                                return method(options.input);
+                                return method(options?.input);
                             },
                         });
                     };

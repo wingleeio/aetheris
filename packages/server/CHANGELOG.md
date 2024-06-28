@@ -1,5 +1,12 @@
 # @aetheris/server
 
+## 0.0.16
+
+### Patch Changes
+
+-   Fix the prefetch bug
+-   Fix bug with prefetch
+
 ## 0.0.15
 
 ### Patch Changes
