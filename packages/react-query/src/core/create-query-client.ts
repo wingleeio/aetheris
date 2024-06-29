@@ -28,9 +28,13 @@ type UseSubscription<IO extends { input: any; message: any }> = (
     unsubscribe: () => void;
 };
 
-type UseQuery<IO extends { input: any; response: any }> = (
-    options: Omit<UseQueryOptions, "queryKey"> & OptionalInput<IO["input"]>,
-) => UseQueryResult<IO["response"], Error> & { queryKey: any[] };
+type UseQuery<IO extends { input: any; response: any }> = IO["input"] extends void
+    ? (
+          options?: Omit<UseQueryOptions, "queryKey"> & OptionalInput<IO["input"]>,
+      ) => UseQueryResult<IO["response"], Error> & { queryKey: any[] }
+    : (
+          options: Omit<UseQueryOptions, "queryKey"> & OptionalInput<IO["input"]>,
+      ) => UseQueryResult<IO["response"], Error> & { queryKey: any[] };
 
 type UseInfiniteQueryInput<Input> = Omit<Input, "cursor">;
 

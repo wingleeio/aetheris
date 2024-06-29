@@ -1,5 +1,11 @@
 # @aetheris/client
 
+## 0.0.17
+
+### Patch Changes
+
+-   Fix useQuery options
+
 ## 0.0.16
 
 ### Patch Changes
