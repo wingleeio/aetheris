@@ -89,7 +89,7 @@ export class Aetheris<Context extends AetherisContext> {
                     const context = {
                         emit,
                         ...defaultContext,
-                        ...(await this.applyMiddlewares({ ...this.context, ...defaultContext })),
+                        ...(await this.applyMiddlewares({ ...this.context, ...defaultContext, input })),
                     };
 
                     this.validate(input, data);
