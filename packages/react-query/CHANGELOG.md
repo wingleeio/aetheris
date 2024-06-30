@@ -1,5 +1,17 @@
 # @aetheris/react-query
 
+## 0.0.19
+
+### Patch Changes
+
+-   Fix wrong data sent to middleware
+
+## 0.0.18
+
+### Patch Changes
+
+-   Update middleware to include input
+
 ## 0.0.17
 
 ### Patch Changes

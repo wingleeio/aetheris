@@ -1,6 +1,6 @@
 {
     "name": "@aetheris/client",
-    "version": "0.0.17",
+    "version": "0.0.19",
     "license": "MIT",
     "type": "module",
     "main": "./dist/index.js",
