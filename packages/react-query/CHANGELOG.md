@@ -1,5 +1,17 @@
 # @aetheris/react-query
 
+## 0.0.22
+
+### Patch Changes
+
+-   Revert type changes
+
+## 0.0.21
+
+### Patch Changes
+
+-   Fix issue with query client types
+
 ## 0.0.20
 
 ### Patch Changes

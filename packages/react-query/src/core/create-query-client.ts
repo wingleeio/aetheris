@@ -71,7 +71,12 @@ export type AetherisQueryClient<T> =
                             useQuery: UseQuery<{ input: Input; response: R }>;
                             useMutation: UseMutation<{ input: Input; response: R }>;
                         }
-                  : AetherisQueryClient<T[K]>;
+                  : T[K] extends () => Promise<infer R>
+                    ? {
+                          useQuery: UseQuery<{ input: void; response: R }>;
+                          useMutation: UseMutation<{ input: void; response: R }>;
+                      }
+                    : AetherisQueryClient<T[K]>;
           };
 
 export const createQueryClient = <Router extends object>(

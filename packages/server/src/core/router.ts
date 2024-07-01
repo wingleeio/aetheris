@@ -11,9 +11,7 @@ type RemapFunction<Fn, Key> = Fn extends (...args: [infer InputData, ...any[]]) 
         : (input: InputData) => TransformResponse<R>
     : Fn;
 
-type Resolver<IO extends { input: any; output: any }> = IO["input"] extends void
-    ? () => Promise<IO["output"]>
-    : (input: IO["input"]) => Promise<IO["output"]>;
+type Resolver<IO extends { input: any; output: any }> = (input: IO["input"]) => Promise<IO["output"]>;
 type Unsubscriber = () => void;
 type Listener<IO extends { input: any; message: any }> = (
     options: IO["input"] extends void
