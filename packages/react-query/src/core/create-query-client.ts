@@ -47,7 +47,7 @@ type UseInfiniteQuery<IO extends { input: any; response: any; cursor: any }> = (
 ) => UseInfiniteQueryResult<InfiniteData<IO["response"]>, Error> & { queryKey: any[] };
 
 type UseMutation<IO extends { input: any; response: any }> = (
-    options?: UseMutationOptions,
+    options?: UseMutationOptions<IO["response"]>,
 ) => UseMutationResult<IO["response"], Error, IO["input"]>;
 
 export type AetherisQueryClient<T> =
