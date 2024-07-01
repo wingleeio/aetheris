@@ -1,11 +1,13 @@
 "use client";
 
+import { api } from "@/lib/api";
 import { client, useAetherisContext } from "@/lib/client";
 
 import React from "react";
 
 export const ClientComponent: React.FC = () => {
     const { queryClient } = useAetherisContext();
+
     const { data, queryKey } = client.helloWorld.useQuery({
         input: {
             name: "Client Component",

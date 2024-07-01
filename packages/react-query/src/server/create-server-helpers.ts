@@ -6,9 +6,11 @@ import {
     dehydrate,
 } from "@tanstack/react-query";
 
-type Prefetch<Input> = Input extends void
-    ? (options?: Omit<FetchQueryOptions, "queryKey">) => Promise<void>
-    : (options: Omit<FetchQueryOptions, "queryKey"> & { input: Input }) => Promise<void>;
+type PrefetchWithInput<Input> = (options: Omit<FetchQueryOptions, "queryKey"> & { input: Input }) => Promise<void>;
+
+type PrefetchWithoutInput = (options?: Omit<FetchQueryOptions, "queryKey">) => Promise<void>;
+
+type Prefetch<Input> = Input extends void ? PrefetchWithoutInput : PrefetchWithInput<Input>;
 type PrefetchInfinite<Input, Cursor> = (
     options: Omit<FetchInfiniteQueryOptions<unknown, unknown, unknown, any, Cursor>, "queryKey"> & { input: Input },
 ) => Promise<void>;
@@ -19,16 +21,22 @@ export type AetherisServerHelpers<T> = T extends object
           [K in keyof T as T[K] extends { subscribe: any } ? never : K]: T[K] extends (
               inputData: infer Input,
           ) => Promise<any>
-              ? Input extends { cursor: infer Cursor }
+              ? Input extends { cursor?: infer Cursor }
                   ? {
                         prefetch: Prefetch<Input>;
                         prefetchInfinite: PrefetchInfinite<Omit<Input, "cursor">, Cursor>;
                         getQueryKey: GetQueryKey<Input>;
                     }
-                  : {
-                        prefetch: Prefetch<Input>;
-                        getQueryKey: GetQueryKey<Input>;
-                    }
+                  : Input extends { cursor: infer Cursor }
+                    ? {
+                          prefetch: Prefetch<Input>;
+                          prefetchInfinite: PrefetchInfinite<Omit<Input, "cursor">, Cursor>;
+                          getQueryKey: GetQueryKey<Input>;
+                      }
+                    : {
+                          prefetch: Prefetch<Input>;
+                          getQueryKey: GetQueryKey<Input>;
+                      }
               : AetherisServerHelpers<T[K]>;
       }
     : T;

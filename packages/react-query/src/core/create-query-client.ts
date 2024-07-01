@@ -28,13 +28,21 @@ type UseSubscription<IO extends { input: any; message: any }> = (
     unsubscribe: () => void;
 };
 
+type UseQueryOptionsWithoutKey = Omit<UseQueryOptions, "queryKey">;
+
+type UseQueryResultWithKey<T> = UseQueryResult<T, Error> & { queryKey: any[] };
+
+type UseQueryWithInput<IO extends { input: any; response: any }> = (
+    options: UseQueryOptionsWithoutKey & OptionalInput<IO["input"]>,
+) => UseQueryResultWithKey<IO["response"]>;
+
+type UseQueryWithoutInput<IO extends { input: any; response: any }> = (
+    options?: UseQueryOptionsWithoutKey & OptionalInput<IO["input"]>,
+) => UseQueryResultWithKey<IO["response"]>;
+
 type UseQuery<IO extends { input: any; response: any }> = IO["input"] extends void
-    ? (
-          options?: Omit<UseQueryOptions, "queryKey"> & OptionalInput<IO["input"]>,
-      ) => UseQueryResult<IO["response"], Error> & { queryKey: any[] }
-    : (
-          options: Omit<UseQueryOptions, "queryKey"> & OptionalInput<IO["input"]>,
-      ) => UseQueryResult<IO["response"], Error> & { queryKey: any[] };
+    ? UseQueryWithoutInput<IO>
+    : UseQueryWithInput<IO>;
 
 type UseInfiniteQueryInput<Input> = Omit<Input, "cursor">;
 
@@ -57,7 +65,7 @@ export type AetherisQueryClient<T> =
           }
         : {
               [K in keyof T]: T[K] extends (inputData: infer Input) => Promise<infer R>
-                  ? Input extends { cursor: infer Cursor }
+                  ? Input extends { cursor?: infer Cursor }
                       ? {
                             useQuery: UseQuery<{ input: Input; response: R }>;
                             useInfiniteQuery: UseInfiniteQuery<{
@@ -67,16 +75,21 @@ export type AetherisQueryClient<T> =
                             }>;
                             useMutation: UseMutation<{ input: Input; response: R }>;
                         }
-                      : {
-                            useQuery: UseQuery<{ input: Input; response: R }>;
-                            useMutation: UseMutation<{ input: Input; response: R }>;
-                        }
-                  : T[K] extends () => Promise<infer R>
-                    ? {
-                          useQuery: UseQuery<{ input: void; response: R }>;
-                          useMutation: UseMutation<{ input: void; response: R }>;
-                      }
-                    : AetherisQueryClient<T[K]>;
+                      : Input extends { cursor: infer Cursor }
+                        ? {
+                              useQuery: UseQuery<{ input: Input; response: R }>;
+                              useInfiniteQuery: UseInfiniteQuery<{
+                                  input: UseInfiniteQueryInput<Input>;
+                                  response: R;
+                                  cursor: Cursor;
+                              }>;
+                              useMutation: UseMutation<{ input: Input; response: R }>;
+                          }
+                        : {
+                              useQuery: UseQuery<{ input: Input; response: R }>;
+                              useMutation: UseMutation<{ input: Input; response: R }>;
+                          }
+                  : AetherisQueryClient<T[K]>;
           };
 
 export const createQueryClient = <Router extends object>(

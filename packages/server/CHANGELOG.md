@@ -1,5 +1,23 @@
 # @aetheris/server
 
+## 0.0.25
+
+### Patch Changes
+
+-   Fix query client types for infinite query
+
+## 0.0.24
+
+### Patch Changes
+
+-   Fix more type issues
+
+## 0.0.23
+
+### Patch Changes
+
+-   Fix broken types
+
 ## 0.0.22
 
 ### Patch Changes
