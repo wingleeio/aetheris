@@ -4,33 +4,38 @@
     "license": "MIT",
     "type": "module",
     "main": "./dist/index.js",
-    "module": "./dist/index.mjs",
+    "module": "./dist/index.js",
     "types": "./dist/index.d.ts",
     "exports": {
         "./package.json": "./package.json",
         ".": {
             "import": "./dist/index.js",
             "require": "./dist/index.cjs",
+            "module": "./dist/index.js",
             "types": "./dist/index.d.ts"
         },
         "./adapters/http": {
             "import": "./dist/adapters/http.js",
             "require": "./dist/adapters/http.cjs",
+            "module": "./dist/adapters/http.js",
             "types": "./dist/adapters/http.d.ts"
         },
         "./adapters/next": {
             "import": "./dist/adapters/next.js",
             "require": "./dist/adapters/next.cjs",
+            "module": "./dist/adapters/next.js",
             "types": "./dist/adapters/next.d.ts"
         },
         "./adapters/ws": {
             "import": "./dist/adapters/ws.js",
             "require": "./dist/adapters/ws.cjs",
+            "module": "./dist/adapters/ws.js",
             "types": "./dist/adapters/ws.d.ts"
         },
         "./core": {
             "import": "./dist/core/index.js",
             "require": "./dist/core/index.cjs",
+            "module": "./dist/core/index.js",
             "types": "./dist/core/index.d.ts"
         }
     },
