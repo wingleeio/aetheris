@@ -205,6 +205,7 @@ export const createQueryClient = <Router extends object>(
                                     ...options,
                                     onMessage: handleMessage,
                                 });
+
                                 subscriptions.set(key, {
                                     unsubscribe,
                                     count: 1,
@@ -217,7 +218,7 @@ export const createQueryClient = <Router extends object>(
                                     subscription.count--;
                                     subscription.callbacks.delete(options.onMessage);
                                     if (subscription.count === 0) {
-                                        subscription.unsubscribe();
+                                        subscription.unsubscribe?.();
                                         subscriptions.delete(key);
                                     }
                                 }

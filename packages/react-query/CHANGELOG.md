@@ -1,5 +1,11 @@
 # @aetheris/react-query
 
+## 0.0.26
+
+### Patch Changes
+
+-   Try to call unsubscribe
+
 ## 0.0.25
 
 ### Patch Changes
