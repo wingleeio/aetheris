@@ -1,47 +1,42 @@
 {
     "name": "@aetheris/server",
-    "version": "0.0.26",
+    "version": "0.0.29",
     "license": "MIT",
     "type": "module",
-    "main": "./dist/index.js",
-    "module": "./dist/index.js",
+    "main": "./dist/index.mjs",
+    "module": "./dist/index.mjs",
     "types": "./dist/index.d.ts",
     "exports": {
         "./package.json": "./package.json",
         ".": {
-            "import": "./dist/index.js",
+            "import": "./dist/index.mjs",
             "require": "./dist/index.cjs",
-            "module": "./dist/index.js",
             "types": "./dist/index.d.ts"
         },
         "./adapters/http": {
-            "import": "./dist/adapters/http.js",
+            "import": "./dist/adapters/http.mjs",
             "require": "./dist/adapters/http.cjs",
-            "module": "./dist/adapters/http.js",
             "types": "./dist/adapters/http.d.ts"
         },
         "./adapters/next": {
-            "import": "./dist/adapters/next.js",
+            "import": "./dist/adapters/next.mjs",
             "require": "./dist/adapters/next.cjs",
-            "module": "./dist/adapters/next.js",
             "types": "./dist/adapters/next.d.ts"
         },
         "./adapters/ws": {
-            "import": "./dist/adapters/ws.js",
+            "import": "./dist/adapters/ws.mjs",
             "require": "./dist/adapters/ws.cjs",
-            "module": "./dist/adapters/ws.js",
             "types": "./dist/adapters/ws.d.ts"
         },
         "./core": {
-            "import": "./dist/core/index.js",
+            "import": "./dist/core/index.mjs",
             "require": "./dist/core/index.cjs",
-            "module": "./dist/core/index.js",
             "types": "./dist/core/index.d.ts"
         }
     },
     "scripts": {
-        "dev": "tsup --format cjs,esm --dts --watch",
-        "build": "tsup --format cjs,esm --dts"
+        "dev": "tsup --dts --watch",
+        "build": "tsup --dts"
     },
     "devDependencies": {
         "@types/node": "^20.14.2",
@@ -49,14 +44,6 @@
         "next": "^14.2.4",
         "typescript": "^5.4.5",
         "zod": "^3.23.8"
-    },
-    "tsup": {
-        "entryPoints": {
-            "index": "src/index.ts",
-            "adapters/http": "src/adapters/http.ts",
-            "adapters/next": "src/adapters/next.ts",
-            "adapters/ws": "src/adapters/ws.ts"
-        }
     },
     "dependencies": {
         "ws": "^8.17.1"
