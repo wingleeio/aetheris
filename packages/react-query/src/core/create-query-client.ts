@@ -23,6 +23,7 @@ type OptionalInput<T> = unknown extends T ? {} : T extends void | undefined ? {}
 type UseSubscription<IO extends { input: any; message: any }> = (
     options: {
         onMessage: (message: IO["message"]) => void;
+        dependencies?: any[];
     } & OptionalInput<IO["input"]>,
 ) => {
     unsubscribe: () => void;
@@ -227,7 +228,7 @@ export const createQueryClient = <Router extends object>(
                             return () => {
                                 ref.current?.();
                             };
-                        }, []);
+                        }, options.dependencies ?? []);
 
                         return {
                             unsubscribe: ref.current,
