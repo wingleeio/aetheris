@@ -1,6 +1,6 @@
 {
     "name": "@aetheris/server",
-    "version": "0.0.29",
+    "version": "0.0.31",
     "license": "MIT",
     "type": "module",
     "main": "./dist/index.mjs",

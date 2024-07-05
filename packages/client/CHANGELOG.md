@@ -1,5 +1,17 @@
 # @aetheris/client
 
+## 0.0.31
+
+### Patch Changes
+
+-   Update dependency build
+
+## 0.0.30
+
+### Patch Changes
+
+-   Add dependency array for subscriptions
+
 ## 0.0.29
 
 ### Patch Changes
