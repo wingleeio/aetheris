@@ -185,6 +185,7 @@ export const createQueryClient = <Router extends object>(
                             if (typeof window === "undefined") {
                                 return;
                             }
+
                             const key = props.join(".") + JSON.stringify(options.input);
 
                             const handleMessage = (data: any) => {
@@ -228,7 +229,7 @@ export const createQueryClient = <Router extends object>(
                             return () => {
                                 ref.current?.();
                             };
-                        }, options.dependencies ?? []);
+                        }, [JSON.stringify(options.input), ...(options.dependencies || [])]);
 
                         return {
                             unsubscribe: ref.current,

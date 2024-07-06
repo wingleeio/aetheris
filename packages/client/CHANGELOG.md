@@ -1,5 +1,47 @@
 # @aetheris/client
 
+## 0.0.38
+
+### Patch Changes
+
+-   Add dependency array back
+
+## 0.0.37
+
+### Patch Changes
+
+-   remove debugging
+
+## 0.0.36
+
+### Patch Changes
+
+-   debugging
+
+## 0.0.35
+
+### Patch Changes
+
+-   Stringify input dependency
+
+## 0.0.34
+
+### Patch Changes
+
+-   fix dependencies for the last time
+
+## 0.0.33
+
+### Patch Changes
+
+-   update dependencies
+
+## 0.0.32
+
+### Patch Changes
+
+-   Fix dependency array
+
 ## 0.0.31
 
 ### Patch Changes
